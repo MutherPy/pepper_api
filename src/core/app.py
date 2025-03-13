@@ -15,11 +15,7 @@ class PepperAPI(BaseApp):
 
     async def __call__(self, scope, receive, send):
         request: Request = self._scope_parser(scope)
-        print(request)
-
         await self.read_body(request=request, receive=receive)
-
-        print(request)
 
 
         response = {

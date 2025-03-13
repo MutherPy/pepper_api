@@ -7,9 +7,9 @@ from src.core.bases.reader import BaseReader
 class HTTPReader(BaseReader):
     async def read(self, request: Request, receiver: Callable):
         more_body = True
-        body_parts = []
+        body_parts = bytearray()
         while more_body:
             message = await receiver()
-            body_parts.append(message.get('body', b'').decode("utf-8"))
+            body_parts.extend(message.get('body', b''))
             more_body = message.get('more_body', False)
-        request.body = ''.join(body_parts)
+        request.body = bytes(body_parts)

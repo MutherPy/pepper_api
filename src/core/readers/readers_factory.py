@@ -4,7 +4,7 @@ from src.core.bases.reader import BaseReader
 from src.core.exceptions.runtime_exc import IncorrectRegistering, MissedRegistering
 
 
-class ReaderFactory:
+class ReaderProvider:
     __READERS: dict[str, Type[BaseReader]] = {}
 
     def register_reader(self, reader_type: str, reader_class: Type[BaseReader], force=False):
