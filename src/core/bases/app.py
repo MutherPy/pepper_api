@@ -12,7 +12,7 @@ class BaseApp(ABC):
             self.routers[router.root] = router
 
     def _scope_parser(self, scope: dict) -> Request:
-        return Request.from_dict(scope)
+        return Request.build(scope)
 
     @abstractmethod
     async def read_body(self, request: Request, receive: Callable):

@@ -1,30 +1,34 @@
-from dataclasses import dataclass
 from http import HTTPMethod
 from urllib.parse import parse_qs
 
-from src.core.entities.entities_util import BaseHTTPEntity
+from src.core.entities.base_entities import BaseHTTPEntity
 from src.core.exceptions.request_exc import IncorrectHTTPMethod
-from src.core.entities.headers import Headers, make_headers
+from src.core.entities.headers import Headers
+from msgspec import Struct
 
 
-@dataclass
-class Request(BaseHTTPEntity):
+class Request(Struct, BaseHTTPEntity):
     type: str
-    http_version: str
     method: str
     path: str
-    query_string: dict
     headers: Headers
-    client: tuple
-    server: tuple
-    state: dict
-    body: str = ''
+    query_string: dict[str, str] = {}
+    body: bytes | None = None
 
-    def __post_init__(self):
+    @classmethod
+    def build(cls, scope: dict) -> "Request":
         try:
-            HTTPMethod[self.method]
+            HTTPMethod[scope["method"]]
         except KeyError as e:
-            raise IncorrectHTTPMethod(f'No such method: {self.method}') from e
-        if query_string := self.query_string.decode("UTF-8"):
-            self.query_string = parse_qs(query_string)
-        self.headers = make_headers(self.headers)
+            raise IncorrectHTTPMethod(f'No such method: {scope["method"]}') from e
+        if query_string := scope["query_string"].decode("UTF-8"):
+            query_string = parse_qs(query_string)
+        headers = Headers.build(scope["headers"])
+        return cls(
+            type=scope["type"],
+            method=scope["method"],
+            path=scope["path"],
+            query_string=query_string,
+            headers=headers,
+            body=None
+        )

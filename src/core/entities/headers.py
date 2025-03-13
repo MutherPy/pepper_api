@@ -1,22 +1,18 @@
-from dataclasses import dataclass
 
-from src.core.entities.entities_util import BaseHTTPEntity
-
-
-@dataclass
-class Headers(BaseHTTPEntity):
-    host: str
-    connection: str
-    accept: str
-    content_type: str
+from src.core.entities.base_entities import BaseHTTPEntity
+from msgspec import Struct
 
 
-def make_headers(value: list[tuple[bytes, bytes]]) -> Headers:
-    d = {}
-    for k, v in value:
-        key = k.decode("utf-8")
-        val = v.decode("utf-8")
-        if '-' in key:
-            key = key.replace('-', '_')
-        d[key] = val
-    return Headers.from_dict(d)
+class Headers(Struct, BaseHTTPEntity):
+    """Клас для обробки заголовків HTTP-запиту."""
+    __headers: dict[str, str]
+
+    @classmethod
+    def build(cls, raw_headers: list[tuple[bytes, bytes]]) -> "Headers":
+        return cls({k.decode("utf-8"): v.decode("utf-8") for k, v in raw_headers})
+
+    def _get(self, key: str, default: str = None) -> str | None:
+        return self.__headers.get(key.lower(), default)
+
+    def __getitem__(self, key):
+        self.__headers.get(key.lower(), None)
