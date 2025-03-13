@@ -1,0 +1,3 @@
+
+class IncorrectHTTPMethod(Exception):
+    pass
