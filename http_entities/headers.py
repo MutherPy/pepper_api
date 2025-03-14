@@ -1,5 +1,5 @@
 
-from src.core.entities.base_entities import BaseHTTPEntity
+from bases.http_entities.base_entities import BaseHTTPEntity
 from msgspec import Struct
 
 

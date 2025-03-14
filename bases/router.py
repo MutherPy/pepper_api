@@ -1,8 +1,6 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 
-from src.core.exceptions.runtime_exc import IncorrectInheritance
-from src.core.bases.app import BaseApp
-from src.core.bases.handler import BaseHandler
+from bases.app import BaseApp
 
 
 class BaseRouter(ABC):
@@ -21,14 +19,9 @@ class BaseRouter(ABC):
         self.__ROUTER_DEFAULT_COUNTER += 1
         return self.__ROUTER_DEFAULT_COUNTER
 
+    @abstractmethod
     def route(self, path: str):
-        def inner(cls):
-            if not issubclass(cls, BaseHandler):
-                raise IncorrectInheritance(cls, BaseHandler)
-            self.app.register_route(path=self.get_full_path(path), handler=cls)
-            return cls
-        return inner
-
+        pass
 
 
 # class BaseSubRouter(ABC, ReExtender):

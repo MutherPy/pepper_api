@@ -1,12 +1,12 @@
 from typing import Callable
 
-from src.core.entities.response.objects import Response
-from src.core.exceptions.request_exc import NotFound
-from src.core.bases.app import BaseApp
-from src.core.bases.reader import BaseReader
-from src.core.entities.request.objects import Request
+from http_entities.response import Response
+from exc.request_exc import NotFound
+from bases.app import BaseApp
+from bases.reader import BaseReader
+from http_entities.request import Request
 
-from src.core.readers import reader_provider
+from core.readers import reader_provider
 
 from http import HTTPStatus
 
@@ -36,10 +36,7 @@ class PepperAPI(BaseApp):
         await reader.read(request=request, receiver=receive)
 
     async def __call__(self, scope, receive, send):
-        request: Request = self._scope_parser(scope)
-        await self.read_body(request=request, receive=receive)
-
+        request = await self.build_request(scope, receive=receive)
         response: Response = await self.request_handler(request=request)
-
         await send(response.start.to_dict())
         await send(response.body.to_dict())

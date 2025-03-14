@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Type, Optional
-from src.core.bases.handler import BaseHandler
+from bases.handler import BaseHandler
 
 
 class BaseRoutingStructure(ABC):

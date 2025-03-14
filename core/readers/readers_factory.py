@@ -1,7 +1,7 @@
 from typing import Type
 
-from src.core.bases.reader import BaseReader
-from src.core.exceptions.runtime_exc import IncorrectRegistering, MissedRegistering
+from bases.reader import BaseReader
+from exc.runtime_exc import IncorrectRegistering, MissedRegistering
 
 
 class ReaderProvider:

@@ -1,8 +1,8 @@
 import re
 from typing import Optional, Type
 
-from src.core.bases.handler import BaseHandler
-from src.core.bases.routing_struct import BaseRoutingStructure
+from bases.handler import BaseHandler
+from bases.routing_struct import BaseRoutingStructure
 
 
 class RadixNode:

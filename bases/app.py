@@ -1,9 +1,14 @@
 from abc import ABC, abstractmethod
-from src.core.entities.request.objects import Request
+from http_entities.request import Request
 from typing import Callable, Type, Optional
 
-from src.core.bases.routing_struct import BaseRoutingStructure
-from src.core.bases.handler import BaseHandler
+from bases.routing_struct import BaseRoutingStructure
+from bases.handler import BaseHandler
+
+from typing import TypeAlias
+
+
+TypeRouterFindResponse: TypeAlias = tuple[Optional[Type[BaseHandler]], Optional[dict]]
 
 
 class BaseApp(ABC):
@@ -13,18 +18,20 @@ class BaseApp(ABC):
     def register_route(self, path: str, handler: Callable):
         self.routing_struct.add_route(path=path, handler=handler)
 
-    def find_handler(self, path: str) -> tuple[Optional[Type[BaseHandler]], Optional[dict]]:
+    def find_handler(self, path: str) -> TypeRouterFindResponse:
         return self.routing_struct.find_handler(path=path)
 
-    def _scope_parser(self, scope: dict) -> Request:
-        return Request.build(scope)
-
-    @abstractmethod
-    async def request_handler(self, request: Request):
-        raise NotImplementedError
+    async def build_request(self, scope: dict, receive: Callable) -> Request:
+        r = Request.build(scope)
+        await self.read_body(request=r, receive=receive)
+        return r
 
     @abstractmethod
     async def read_body(self, request: Request, receive: Callable):
+        raise NotImplementedError
+
+    @abstractmethod
+    async def request_handler(self, request: Request):
         raise NotImplementedError
 
     @abstractmethod
@@ -32,4 +39,3 @@ class BaseApp(ABC):
         raise NotImplementedError
 
 
-from src.core.bases.router import BaseRouter

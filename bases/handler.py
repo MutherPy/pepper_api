@@ -1,7 +1,7 @@
 from abc import ABC
 
-from src.core.exceptions.request_exc import MethodNotAllowed
-from src.core.entities.request.objects import Request
+from exc.request_exc import MethodNotAllowed
+from http_entities.request import Request
 
 
 class BaseHandler(ABC):
@@ -10,11 +10,9 @@ class BaseHandler(ABC):
         self.r: Request = request
 
     async def process(self, method: str, params: dict):
+        method = method.lower()
         try:
-            controller = getattr(self, method)
-            return await controller(**params)
+            controller_method = getattr(self, method)
+            return await controller_method(**params)
         except AttributeError:
             raise MethodNotAllowed(method)
-
-
-

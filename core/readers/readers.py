@@ -1,7 +1,7 @@
 from typing import Callable
 
-from src.core.entities.request.objects import Request
-from src.core.bases.reader import BaseReader
+from http_entities.request import Request
+from bases.reader import BaseReader
 
 
 class HTTPReader(BaseReader):

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from src.core.entities.request.objects import Request
+from http_entities.request import Request
 from typing import Callable
 
 

@@ -1,9 +1,9 @@
 from typing import Union
 
 from msgspec import Struct
-from src.core.entities.base_entities import BaseHTTPEntity
-from src.core.entities.response.types import ResponseTypes
-from src.core.entities.headers import Headers
+from bases.http_entities.base_entities import BaseHTTPEntity
+from http_entities.response_types import ResponseTypes
+from http_entities.headers import Headers
 
 
 class ResponseStart(Struct, BaseHTTPEntity):

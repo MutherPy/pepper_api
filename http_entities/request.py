@@ -1,9 +1,9 @@
 from http import HTTPMethod
 from urllib.parse import parse_qs
 
-from src.core.entities.base_entities import BaseHTTPEntity
-from src.core.exceptions.request_exc import IncorrectHTTPMethod
-from src.core.entities.headers import Headers
+from bases.http_entities.base_entities import BaseHTTPEntity
+from exc.request_exc import IncorrectHTTPMethod
+from http_entities.headers import Headers
 from msgspec import Struct
 
 
