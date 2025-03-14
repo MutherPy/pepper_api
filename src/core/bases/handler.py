@@ -12,7 +12,7 @@ class BaseHandler(ABC):
     async def process(self, method: str, params: dict):
         try:
             controller = getattr(self, method)
-            await controller(**params)
+            return await controller(**params)
         except AttributeError:
             raise MethodNotAllowed(method)
 
