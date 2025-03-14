@@ -19,8 +19,8 @@ class Request(Struct, BaseHTTPEntity):
     def build(cls, scope: dict) -> "Request":
         try:
             HTTPMethod[scope["method"]]
-        except KeyError as e:
-            raise IncorrectHTTPMethod(f'No such method: {scope["method"]}') from e
+        except KeyError:
+            raise IncorrectHTTPMethod(f'No such method: {scope["method"]}')
         if query_string := scope["query_string"].decode("UTF-8"):
             query_string = parse_qs(query_string)
         headers = Headers.build(scope["headers"])

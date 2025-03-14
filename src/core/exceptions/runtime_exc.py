@@ -1,11 +1,17 @@
 
 class IncorrectRegistering(Exception):
-    def __init__(self, cls):
+    def __init__(self, cls: object):
         msg = f'{cls.__name__} already registered.'
         super().__init__(msg)
 
 
 class MissedRegistering(Exception):
-    def __init__(self, cls_type):
+    def __init__(self, cls_type: str):
         msg = f'"{cls_type}" missed in register table.'
+        super().__init__(msg)
+
+
+class IncorrectInheritance(Exception):
+    def __init__(self, cls: object, needed: object):
+        msg = f'{cls.__name__} class must be derived from {needed.__name__}'
         super().__init__(msg)
