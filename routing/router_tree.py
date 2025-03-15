@@ -1,8 +1,5 @@
 import re
-from typing import Optional, Type
-
-from bases.handler import BaseHandler
-from bases.routing_struct import BaseRoutingStructure
+from bases.routing_struct import BaseRoutingStructure, TypeRouterFindResponse
 
 
 class RadixNode:
@@ -52,7 +49,7 @@ class RadixNode:
 
         node.handler = handler
 
-    def find(self, path_parts) -> tuple[Optional[Type[BaseHandler]], Optional[dict]]:
+    def find(self, path_parts) -> TypeRouterFindResponse:
         node = self
         params = {}
 
@@ -91,7 +88,7 @@ class RadixTree(BaseRoutingStructure):
         path_parts = path.strip("/").split("/")
         self.root.insert(path_parts, handler)
 
-    def find_handler(self, path: str) -> tuple[Optional[Type[BaseHandler]], Optional[dict]]:
+    def find_handler(self, path: str) -> TypeRouterFindResponse:
         path_parts = path.strip("/").split("/")
         return self.root.find(path_parts)
 

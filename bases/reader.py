@@ -6,4 +6,4 @@ from typing import Callable
 class BaseReader(ABC):
     @abstractmethod
     async def read(self, request: HTTPRequest, receiver: Callable):
-        raise NotImplementedError
+        pass

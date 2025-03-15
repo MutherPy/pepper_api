@@ -2,7 +2,7 @@ from collections import namedtuple
 
 
 RequestType = namedtuple(
-    'RequestType', ('TYPE', )
+    'RequestType', ('HTTP', )
 )("http")
 
 ReceiveEventType = namedtuple(

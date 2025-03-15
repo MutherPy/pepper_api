@@ -5,7 +5,6 @@ from http_entities.request import HTTPRequest
 
 
 class BaseHandler(ABC):
-
     def __init__(self, request: HTTPRequest):
         self.r: HTTPRequest = request
 

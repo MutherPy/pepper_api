@@ -1,14 +1,8 @@
 from abc import ABC, abstractmethod
 from http_entities.request import HTTPRequest
-from typing import Callable, Type, Optional
+from typing import Callable
 
-from bases.routing_struct import BaseRoutingStructure
-from bases.handler import BaseHandler
-
-from typing import TypeAlias
-
-
-TypeRouterFindResponse: TypeAlias = tuple[Optional[Type[BaseHandler]], Optional[dict]]
+from bases.routing_struct import BaseRoutingStructure, TypeRouterFindResponse
 
 
 class BaseApp(ABC):
