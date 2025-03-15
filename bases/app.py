@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from http_entities.request import Request
+from http_entities.request import HTTPRequest
 from typing import Callable, Type, Optional
 
 from bases.routing_struct import BaseRoutingStructure
@@ -21,17 +21,17 @@ class BaseApp(ABC):
     def find_handler(self, path: str) -> TypeRouterFindResponse:
         return self.routing_struct.find_handler(path=path)
 
-    async def build_request(self, scope: dict, receive: Callable) -> Request:
-        r = Request.build(scope)
+    async def build_request(self, scope: dict, receive: Callable) -> HTTPRequest:
+        r = HTTPRequest.build(scope)
         await self.read_body(request=r, receive=receive)
         return r
 
     @abstractmethod
-    async def read_body(self, request: Request, receive: Callable):
+    async def read_body(self, request: HTTPRequest, receive: Callable):
         raise NotImplementedError
 
     @abstractmethod
-    async def request_handler(self, request: Request):
+    async def request_handler(self, request: HTTPRequest):
         raise NotImplementedError
 
     @abstractmethod

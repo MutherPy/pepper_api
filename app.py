@@ -4,7 +4,7 @@ from http_entities.response import Response
 from exc.request_exc import NotFound
 from bases.app import BaseApp
 from bases.reader import BaseReader
-from http_entities.request import Request
+from http_entities.request import HTTPRequest
 
 from core.readers import reader_provider
 
@@ -13,7 +13,7 @@ from http import HTTPStatus
 
 class PepperAPI(BaseApp):
 
-    async def request_handler(self, request: Request) -> Response:
+    async def request_handler(self, request: HTTPRequest) -> Response:
         handler, params = self.find_handler(request.path)
         if not handler:
             raise NotFound(path=request.path)
@@ -31,7 +31,7 @@ class PepperAPI(BaseApp):
             )
         )
 
-    async def read_body(self, request: Request, receive: Callable):
+    async def read_body(self, request: HTTPRequest, receive: Callable):
         reader: BaseReader = reader_provider.get_reader(request.type)
         await reader.read(request=request, receiver=receive)
 

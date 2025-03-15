@@ -1,13 +1,13 @@
 from abc import ABC
 
 from exc.request_exc import MethodNotAllowed
-from http_entities.request import Request
+from http_entities.request import HTTPRequest
 
 
 class BaseHandler(ABC):
 
-    def __init__(self, request: Request):
-        self.r: Request = request
+    def __init__(self, request: HTTPRequest):
+        self.r: HTTPRequest = request
 
     async def process(self, method: str, params: dict):
         method = method.lower()

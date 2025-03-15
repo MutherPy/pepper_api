@@ -1,11 +1,11 @@
 from typing import Callable
 
-from http_entities.request import Request
+from http_entities.request import HTTPRequest
 from bases.reader import BaseReader
 
 
 class HTTPReader(BaseReader):
-    async def read(self, request: Request, receiver: Callable):
+    async def read(self, request: HTTPRequest, receiver: Callable):
         more_body = True
         body_parts = bytearray()
         while more_body:
