@@ -4,7 +4,7 @@ from bases.handler import BaseHandler
 from typing import TypeAlias
 
 
-TypeRouterFindResponse: TypeAlias = Union[tuple[Type[BaseHandler], dict], tuple[None, None]]
+RSFindType: TypeAlias = Union[tuple[Type[BaseHandler], dict], tuple[None, None]]
 
 
 class BaseRoutingStructure(ABC):
@@ -13,7 +13,7 @@ class BaseRoutingStructure(ABC):
         pass
 
     @abstractmethod
-    def find_handler(self, path: str) -> TypeRouterFindResponse:
+    def find_handler(self, path: str) -> RSFindType:
         pass
 
     @abstractmethod

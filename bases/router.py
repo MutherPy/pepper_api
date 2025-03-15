@@ -4,20 +4,13 @@ from bases.app import BaseApp
 
 
 class BaseRouter(ABC):
-    __ROUTER_DEFAULT_COUNTER: int = 0
 
-    def __init__(self, *, app: BaseApp, root: str, name=None):
-        self.name = name if name else f'Router_#{self._router_counter}'
+    def __init__(self, *, app: BaseApp, root: str):
         self.app = app
         self.root = root
 
     def get_full_path(self, path: str) -> str:
         return f'{self.root}{path}'
-
-    @property
-    def _router_counter(self) -> int:
-        self.__ROUTER_DEFAULT_COUNTER += 1
-        return self.__ROUTER_DEFAULT_COUNTER
 
     @abstractmethod
     def route(self, path: str):

@@ -1,5 +1,6 @@
 from abc import ABC
 from dataclasses import dataclass
+from typing import Optional, Union
 
 from bases.http_entities.base_mixins import BaseDictHttp, BaseASGICompASGI
 from bases.http_entities.headers import BaseHeaders
@@ -16,7 +17,7 @@ class BaseStartResponse(BaseDictHttp, BaseASGICompASGI, ABC):
 class BaseBodyResponse(BaseDictHttp, BaseASGICompASGI, ABC):
     type: str
     body: bytes
-    more_body: bool
+    more_body: bool = False
 
 
 @dataclass

@@ -10,5 +10,5 @@ ReceiveEventType = namedtuple(
 )("http.request", "http.disconnect")
 
 SendEventTypes = namedtuple(
-    'SendEventTypes', ('START', 'DISCONNECT')
+    'SendEventTypes', ('START', 'BODY')
 )("http.response.start", "http.response.body")
