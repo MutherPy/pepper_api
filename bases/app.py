@@ -12,23 +12,6 @@ from bases.http_types import SendEventTypes
 from orjson import dumps
 
 
-# FIXME
-#### TEST PURPS !@!!
-class ResponseBodyManager:
-    _data_managers = {
-        str: lambda x: bytes(x, 'utf-8'),
-        dict: dumps,
-        int: bytes,
-        type(None): dumps,
-    }
-
-    @classmethod
-    def process(cls, body_data):
-        return cls._data_managers[type(body_data)](body_data)
-######
-
-
-
 class BaseApp(ABC):
     def __init__(self, routing_struct: BaseRoutingStructure):
         self.routing_struct: BaseRoutingStructure = routing_struct
@@ -54,8 +37,7 @@ class BaseApp(ABC):
         if not isinstance(headers, BaseHeaders):
             headers = Headers.from_dict(headers) if headers else {}
         start = HTTPResponseStart(type=SendEventTypes.START, status=status, headers=headers)
-        response_body = ResponseBodyManager.process(body)  # FIXME
-        body = HTTPResponseBody(type=SendEventTypes.BODY, body=response_body, more_body=more_body)
+        body = HTTPResponseBody(type=SendEventTypes.BODY, body=body, more_body=more_body)
         return HTTPResponse(start=start, body=body)
 
     @abstractmethod

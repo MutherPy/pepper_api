@@ -24,6 +24,19 @@ class HTTPResponseStart(DataClassDictMixin, BaseStartResponse):
         return self.to_dict()
 
 
+class ResponseBodyManager:
+    _data_managers = {
+        str: lambda x: bytes(x, 'utf-8'),
+        dict: dumps,
+        int: lambda x: bytes(str(x), 'utf-8'),
+        type(None): dumps,
+    }
+
+    @classmethod
+    def process(cls, body_data):
+        return cls._data_managers[type(body_data)](body_data)
+
+
 @dataclass
 class HTTPResponseBody(DataClassDictMixin, BaseBodyResponse):
 
@@ -32,10 +45,9 @@ class HTTPResponseBody(DataClassDictMixin, BaseBodyResponse):
             "serialization_strategy": pass_through,
         }
     )
-    #
-    # def __post_init__(self):
-    #     self.body = dumps(self.body)
-    #     print(self.body)
+
+    def __post_init__(self):
+        self.body = ResponseBodyManager.process(self.body)
 
     def to_asgi(self):
         return self.to_dict()
