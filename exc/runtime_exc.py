@@ -15,3 +15,12 @@ class IncorrectInheritance(Exception):
     def __init__(self, cls: object, needed: object):
         msg = f'{cls.__name__} class must be derived from {needed.__name__}'
         super().__init__(msg)
+
+
+class ServiceError(Exception):
+    def __init__(self, *args):
+        if not args:
+            msg = "Incorrect processing"
+        else:
+            msg = f"Incorrect processing: {', '.join(args)}"
+        super().__init__(msg)
