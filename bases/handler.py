@@ -49,7 +49,7 @@ class BaseHandler(ABC):
     async def process(self, method: str, url_params: dict):
         method = method.lower()
         try:
-            controller_method = getattr(self, method)
+            controller_method: Callable = getattr(self, method)
         except AttributeError:
             raise MethodNotAllowed(method)
         try:

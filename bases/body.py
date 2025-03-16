@@ -7,3 +7,10 @@ class BaseBodyEntity(ABC):
     @abstractmethod
     def from_json(cls, data: bytes):
         pass
+
+
+class BaseBodyResponseEntity(ABC):
+
+    @abstractmethod
+    def to_jsonb(self):
+        pass

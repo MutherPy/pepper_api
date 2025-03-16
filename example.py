@@ -10,7 +10,6 @@ from routing.router_tree import RadixTree
 
 
 app = PepperAPI(routing_struct=RadixTree())
-
 r = Router(app=app, root='/api/v1')
 
 
