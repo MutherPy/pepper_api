@@ -1,10 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Type, Union
-from bases.handler import BaseHandler
-from typing import TypeAlias
+from typing import Callable
 
-
-RSFindType: TypeAlias = Union[tuple[Type[BaseHandler], dict], tuple[None, None]]
+from bases import RSFindType
 
 
 class BaseRoutingStructure(ABC):

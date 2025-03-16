@@ -12,7 +12,7 @@ from bases.body import BaseBodyResponseEntity
 
 @dataclass
 class HTTPResponseStart(DataClassDictMixin, BaseStartResponse):
-    headers: Headers
+    headers: Headers = None
 
     class Config(BaseConfig):
         serialization_strategy = {
@@ -34,7 +34,7 @@ class ResponseBodyManager:
     }
 
     @classmethod
-    def process(cls, body_data):
+    def process(cls, body_data) -> bytes:
         t = type(body_data)
         if issubclass(t, BaseBodyResponseEntity):
             return body_data.to_jsonb()

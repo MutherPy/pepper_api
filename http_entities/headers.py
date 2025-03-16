@@ -26,7 +26,7 @@ class Headers(BaseHeaders):
         return self._headers.get(key.lower(), default)
 
     def set(self, key: str, val):
-        self._headers[key.lower()] = val
+        self._headers[key] = val
 
     def to_asgi(self) -> list[tuple]:
         return [(k.encode("utf-8"), v.encode("utf-8")) for k, v in self._headers.items()]

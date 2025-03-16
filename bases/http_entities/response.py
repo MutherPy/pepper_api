@@ -1,6 +1,5 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Optional, Union
 
 from bases.http_entities.base_mixins import BaseDictHttp, BaseASGICompASGI
 from bases.http_entities.headers import BaseHeaders

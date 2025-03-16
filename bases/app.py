@@ -1,15 +1,13 @@
 from abc import ABC, abstractmethod
 
+from bases import AsyncFunction, RSFindType
 from bases.http_entities.headers import BaseHeaders
-from http_entities.request import HTTPRequest
-from http_entities.response import HTTPResponse, HTTPResponseStart, HTTPResponseBody
-from http_entities.headers import Headers
-from typing import Callable, Union, Optional, Any
+from bases.http_entities.request import BaseRequest
+from bases.http_entities.response import BaseResponse
+from typing import Callable, Any, Union
 
-from bases.routing_struct import BaseRoutingStructure, RSFindType
-from http import HTTPStatus
-from bases.http_types import SendEventTypes
-from orjson import dumps
+from bases.routing_struct import BaseRoutingStructure
+from core.exc_result import ExceptionResult
 
 
 class BaseApp(ABC):
@@ -22,32 +20,37 @@ class BaseApp(ABC):
     def find_handler(self, path: str) -> RSFindType:
         return self.routing_struct.find_handler(path=path)
 
-    async def build_request(self, scope: dict, receive: Callable) -> HTTPRequest:
-        r = HTTPRequest.from_scope(scope)
-        await self.read_body(request=r, receive=receive)
-        return r
-
-    async def build_response(
-            self,
-            status: int = HTTPStatus.OK,
-            headers: Union[BaseHeaders, dict] = None,
-            body: Optional[Any] = None,
-            more_body: bool = False
-    ) -> HTTPResponse:
-        if not isinstance(headers, BaseHeaders):
-            headers = Headers.from_dict(headers) if headers else {}
-        start = HTTPResponseStart(type=SendEventTypes.START, status=status, headers=headers)
-        body = HTTPResponseBody(type=SendEventTypes.BODY, body=body, more_body=more_body)
-        return HTTPResponse(start=start, body=body)
-
     @abstractmethod
-    async def read_body(self, request: HTTPRequest, receive: Callable):
+    async def build_request(self, scope: dict, receive: AsyncFunction) -> BaseRequest:
         pass
 
     @abstractmethod
-    async def request_handler(self, request: HTTPRequest):
+    async def request_handler(self, request: BaseRequest) -> Any:
         pass
 
     @abstractmethod
-    async def __call__(self, scope, receive, send):
+    async def exceptions_handler(self, e: Exception) -> ExceptionResult:
         pass
+
+    @abstractmethod
+    def build_headers(self, **kwargs) -> BaseHeaders:
+        pass
+
+    @abstractmethod
+    async def build_response(self, result: Union[Any, ExceptionResult], headers: BaseHeaders) -> BaseResponse:
+        pass
+
+    async def __call__(self, scope: dict, receive, send):
+        request: BaseRequest = await self.build_request(scope=scope, receive=receive)
+
+        try:
+            result: Any = await self.request_handler(request=request)
+        except Exception as e:
+            result: ExceptionResult = await self.exceptions_handler(e=e)
+        headers: BaseHeaders = self.build_headers()
+        response: BaseResponse = await self.build_response(result, headers)
+
+        await send(response.start.to_asgi())
+        await send(response.body.to_asgi())
+
+

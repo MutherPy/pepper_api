@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from app import PepperAPI
-from bases.body import BaseBodyEntity
+from bases.body import BaseBodyEntity, BaseBodyResponseEntity
 from routing.router import Router
 from bases.handler import BaseHandler
 from routing.router_tree import RadixTree
@@ -14,13 +14,13 @@ r = Router(app=app, root='/api/v1')
 
 
 @dataclass
-class Place(DataClassORJSONMixin, BaseBodyEntity):
+class Place:
     city: str
     country: str
 
 
 @dataclass
-class User(DataClassORJSONMixin, BaseBodyEntity):
+class UserFromRequest(DataClassORJSONMixin, BaseBodyEntity):
     name: str
     age: int
     place:  Place
@@ -36,12 +36,24 @@ class User(DataClassORJSONMixin, BaseBodyEntity):
 #   }
 # }
 
+@dataclass
+class UserAnswer:
+    agree: bool
+
+
+@dataclass
+class UserToResponse(DataClassORJSONMixin, BaseBodyResponseEntity):
+    name: str
+    age: int
+    answer: UserAnswer
+
 
 @r.route('/test')
 class Test1(BaseHandler):
-    async def get(self, user: User):
+    async def get(self, user: UserFromRequest) -> UserToResponse:
         # serialized User object
-        return {'answer': f'Hello {user.name} from {user.place.city}'}
+        agree = True if user.age > 18 else False
+        return UserToResponse(name=user.name, age=user.age, answer=UserAnswer(agree=agree))
 
 
 @r.route('/test/{id}')
