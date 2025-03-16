@@ -24,3 +24,21 @@ class ServiceError(Exception):
         else:
             msg = f"Incorrect processing: {', '.join(args)}"
         super().__init__(msg)
+
+
+class EmptyArgumentAnnotation(Exception):
+    def __init__(self, arg):
+        msg = f"Not annotated controller argument: {arg}"
+        super().__init__(msg)
+
+
+class TooMuchUrlParams(Exception):
+    def __init__(self, arg):
+        msg = f"Too much parameters for controller: {', '.join(arg)}"
+        super().__init__(msg)
+
+
+class NotEnoughUrlParams(Exception):
+    def __init__(self, arg):
+        msg = f"Not enough parameters for controller: {', '.join(arg)}"
+        super().__init__(msg)
