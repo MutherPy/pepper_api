@@ -1,13 +1,9 @@
 from bases.http_entities.headers import BaseHeaders
 from dataclasses import dataclass
-from orjson import dumps
 
 
 @dataclass
 class Headers(BaseHeaders):
-    def to_json(self):
-        return dumps(self._headers).decode()
-
     @classmethod
     def from_scope(cls, scope: dict) -> "Headers":
         raw_headers = scope.get('headers')
@@ -27,6 +23,9 @@ class Headers(BaseHeaders):
 
     def set(self, key: str, val):
         self._headers[key] = val
+
+    def update(self, **kwargs):
+        self._headers.update(kwargs)
 
     def to_asgi(self) -> list[tuple]:
         return [(k.encode("utf-8"), v.encode("utf-8")) for k, v in self._headers.items()]

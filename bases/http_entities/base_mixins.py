@@ -36,7 +36,13 @@ class BaseASGICompScope(ABC):
 
 class BaseASGICompASGI(ABC):
     @abstractmethod
-    def to_asgi(self):
+    async def to_asgi(self):
+        pass
+
+
+class BaseASGISend(ABC):
+    @abstractmethod
+    async def send_to_asgi(self, sender):
         pass
 
 

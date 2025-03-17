@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from bases.http_entities.base_mixins import BaseDictHttp, BaseASGICompASGI
+from bases.http_entities.base_mixins import BaseDictHttp, BaseASGICompASGI, BaseASGISend
 from bases.http_entities.headers import BaseHeaders
 
 
@@ -11,15 +11,30 @@ class BaseStartResponse(BaseDictHttp, BaseASGICompASGI, ABC):
     status: int
     headers: BaseHeaders
 
+    @classmethod
+    @abstractmethod
+    def build(cls, *args, **kwargs) -> "BaseStartResponse":
+        pass
+
 
 @dataclass
 class BaseBodyResponse(BaseDictHttp, BaseASGICompASGI, ABC):
     type: str
     body: bytes
-    more_body: bool = False
+    more_body: bool
+
+    @classmethod
+    @abstractmethod
+    def build(cls, *args, **kwargs) -> "BaseBodyResponse":
+        pass
 
 
 @dataclass
-class BaseResponse(ABC):
+class BaseResponse(BaseASGISend, ABC):
     start: BaseStartResponse
     body: BaseBodyResponse
+
+    @classmethod
+    @abstractmethod
+    def build(cls, *args, **kwargs) -> "BaseResponse":
+        pass

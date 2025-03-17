@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 
 @dataclass
-class BaseHeaders(BaseJsonHttp, BaseDictHttp, BaseASGIComp, ABC):
+class BaseHeaders(BaseDictHttp, BaseASGIComp, ABC):
     _headers: dict = field(default_factory=dict)
 
     @abstractmethod
@@ -13,4 +13,8 @@ class BaseHeaders(BaseJsonHttp, BaseDictHttp, BaseASGIComp, ABC):
 
     @abstractmethod
     def get(self, key: str) -> str:
+        pass
+
+    @abstractmethod
+    def update(self, **kwargs):
         pass

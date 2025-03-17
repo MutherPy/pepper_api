@@ -12,3 +12,6 @@ ReceiveEventType = namedtuple(
 SendEventTypes = namedtuple(
     'SendEventTypes', ('START', 'BODY')
 )("http.response.start", "http.response.body")
+
+
+ResponseType = namedtuple('ResponseType', ('HTTP', 'STREAM'))('HTTP', 'STREAM')

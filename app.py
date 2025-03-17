@@ -1,23 +1,26 @@
 from http import HTTPStatus
-from typing import Type, Any, Union
+from typing import Type, Any, Union, Optional
 
 from bases import AsyncFunction
 from bases.handler import BaseHandler
-from bases.http_types import SendEventTypes
 from core.exc_result import ExceptionResult
-from http_entities.headers import Headers
-from http_entities.response import HTTPResponse, HTTPResponseStart, HTTPResponseBody
+from core.response_factory import ResponseBuilder
 from exc.request_exc import NotFound
 from bases.app import BaseApp
 from bases.reader import BaseReader
-from http_entities.request import HTTPRequest
 
 from core.readers import reader_provider
+from http_entities import (
+    Headers,
+    HTTPResponse,
+    HTTPRequest, StreamingHTTPResponse
+)
 
 
 class PepperAPI(BaseApp):
 
-    async def read_body(self, request: HTTPRequest, receive: AsyncFunction):
+    @staticmethod
+    async def read_body(request: HTTPRequest, receive: AsyncFunction):
         reader: BaseReader = reader_provider.get_reader(request.type)
         await reader.read(request=request, receiver=receive)
 
@@ -40,31 +43,22 @@ class PepperAPI(BaseApp):
     async def exceptions_handler(self, e: Exception) -> ExceptionResult:
         return ExceptionResult.from_exc(e)
 
-    def build_headers(self) -> Headers:
+    def build_headers(self, **kwargs) -> Headers:
         basic_headers = {
-            'Content-Type': 'application/json',
+            'Powered-X': 'PepperAPI',
         }
-        h = Headers.from_dict(basic_headers)
-        return h
+        basic_headers.update(kwargs)
+        return Headers.from_dict(basic_headers)
 
-    async def _build_bad_response(self, data: ExceptionResult) -> HTTPResponse:
-        start = HTTPResponseStart(type=SendEventTypes.START, status=data.status)
-        # TODO serialization in body as await
-        body = HTTPResponseBody(type=SendEventTypes.BODY, body=data.msg, more_body=False)  # TODO streaming
-        return HTTPResponse(start=start, body=body)
+    async def build_response(self, result: Optional[Any] = None, exc_result: Optional[ExceptionResult] = None) -> Union[HTTPResponse, StreamingHTTPResponse]:
+        response: Union[HTTPResponse, StreamingHTTPResponse]
 
-    async def _build_response(self, data: Any) -> HTTPResponse:
-        start = HTTPResponseStart(type=SendEventTypes.START, status=HTTPStatus.OK)
-        # TODO serialization in body as await
-        body = HTTPResponseBody(type=SendEventTypes.BODY, body=data, more_body=False)  # TODO streaming
-        return HTTPResponse(start=start, body=body)
-
-    async def build_response(self, result: Union[Any, ExceptionResult], headers: Headers) -> HTTPResponse:
-        response: HTTPResponse
-
-        if not isinstance(result, ExceptionResult):
-            response = await self._build_response(result)
-        else:
-            response = await self._build_bad_response(result)
-        response.start.headers = headers
+        status = HTTPStatus.OK
+        body = result
+        if exc_result:
+            status = exc_result.status
+            body = exc_result.body
+        response = await ResponseBuilder.build(status=status, body=body)
+        h = self.build_headers()
+        response.update_headers(headers=h)
         return response

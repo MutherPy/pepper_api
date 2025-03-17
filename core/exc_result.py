@@ -1,7 +1,7 @@
 from dataclasses import dataclass
-from exc.response_exc import UnprocessableEntity
-from exc.request_exc import NotFound, IncorrectHTTPMethod, MethodNotAllowed
+from exc.request_exc import NotFound, IncorrectHTTPMethod, MethodNotAllowed, UnprocessableEntity
 from http import HTTPStatus
+import traceback
 
 
 _HANDLED_EXC = {
@@ -15,11 +15,13 @@ _HANDLED_EXC = {
 @dataclass
 class ExceptionResult:
     status: int
-    msg: str
+    body: str
 
     @classmethod
     def from_exc(cls, e: Exception, default_msg: str = 'Server broke') -> "ExceptionResult":
         if status := _HANDLED_EXC.get(type(e)):
-            return cls(status=status, msg=str(e))
+            print(traceback.print_tb(e.__traceback__))
+            return cls(status=status, body=str(e))
         else:
-            return cls(status=HTTPStatus.INTERNAL_SERVER_ERROR, msg=default_msg)
+            print(traceback.print_tb(e.__traceback__))
+            return cls(status=HTTPStatus.INTERNAL_SERVER_ERROR, body=default_msg)

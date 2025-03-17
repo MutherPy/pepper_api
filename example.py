@@ -7,6 +7,7 @@ from bases.body import BaseBodyEntity, BaseBodyResponseEntity
 from routing.router import Router
 from bases.handler import BaseHandler
 from routing.router_tree import RadixTree
+from asyncio import sleep
 
 
 app = PepperAPI(routing_struct=RadixTree())
@@ -48,6 +49,7 @@ class UserToResponse(DataClassORJSONMixin, BaseBodyResponseEntity):
     answer: UserAnswer
 
 
+# EXAMPLE OF REGULAR REQUEST WITH BODY DATA AND RESPONSE
 @r.route('/test')
 class Test1(BaseHandler):
     async def get(self, user: UserFromRequest) -> UserToResponse:
@@ -56,10 +58,19 @@ class Test1(BaseHandler):
         return UserToResponse(name=user.name, age=user.age, answer=UserAnswer(agree=agree))
 
 
+# EXAMPLE OF STREAMING RESPONSE
 @r.route('/test/{id}')
 class TestH2(BaseHandler):
-    async def post(self, id):
-        print(self, 'get', id)
+    async def get(self, id: int):
+        print(id)
+
+        async def file_getter():
+            with open('example.py', 'rb') as f:
+                for line in f:
+                    yield line
+                    await sleep(0)
+
+        return file_getter  # or file_getter()
 
 
 if __name__ == '__main__':

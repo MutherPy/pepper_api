@@ -4,10 +4,11 @@ from bases import AsyncFunction, RSFindType
 from bases.http_entities.headers import BaseHeaders
 from bases.http_entities.request import BaseRequest
 from bases.http_entities.response import BaseResponse
-from typing import Callable, Any, Union
+from typing import Callable, Any, Union, Optional
 
 from bases.routing_struct import BaseRoutingStructure
 from core.exc_result import ExceptionResult
+from core.response_factory import ResponseFactory
 
 
 class BaseApp(ABC):
@@ -37,20 +38,18 @@ class BaseApp(ABC):
         pass
 
     @abstractmethod
-    async def build_response(self, result: Union[Any, ExceptionResult], headers: BaseHeaders) -> BaseResponse:
+    async def build_response(self, result: Optional[Any] = None, exc_result: Optional[ExceptionResult] = None) -> BaseResponse:
         pass
 
     async def __call__(self, scope: dict, receive, send):
         request: BaseRequest = await self.build_request(scope=scope, receive=receive)
-
+        result: Optional[Any] = None
+        exc_result: Optional[ExceptionResult] = None
         try:
             result: Any = await self.request_handler(request=request)
         except Exception as e:
-            result: ExceptionResult = await self.exceptions_handler(e=e)
-        headers: BaseHeaders = self.build_headers()
-        response: BaseResponse = await self.build_response(result, headers)
+            exc_result: ExceptionResult = await self.exceptions_handler(e=e)
 
-        await send(response.start.to_asgi())
-        await send(response.body.to_asgi())
+        response: BaseResponse = await self.build_response(result=result, exc_result=exc_result)
 
-
+        await response.send_to_asgi(send)

@@ -3,7 +3,7 @@ from typing import Callable
 
 from bases.body import BaseBodyEntity
 
-from exc.request_exc import MethodNotAllowed
+from exc.request_exc import MethodNotAllowed, UnprocessableEntity
 from exc.runtime_exc import ServiceError, EmptyArgumentAnnotation, TooMuchUrlParams, NotEnoughUrlParams
 from http_entities.request import HTTPRequest
 from inspect import signature, Parameter
@@ -32,7 +32,10 @@ class BaseHandler(ABC):
                 raise EmptyArgumentAnnotation(param_name)
 
             if issubclass(param_type, BaseBodyEntity):
-                args_to_return[param_name] = param_type.from_json(self.r.body)
+                try:
+                    args_to_return[param_name] = param_type.from_json(self.r.body)
+                except Exception as e:
+                    raise UnprocessableEntity(str(e)) from e
                 continue
 
             if url_param_value := url_params.pop(param_name, None):

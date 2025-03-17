@@ -7,3 +7,5 @@
 4) simple-like DI shit
 
 5) better headers propagation. now like shit, no headers in response...
+
+6) fix routing -> app registration
