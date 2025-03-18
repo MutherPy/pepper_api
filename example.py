@@ -10,10 +10,6 @@ from routing.router_tree import RadixTree
 from asyncio import sleep
 
 
-app = PepperAPI(routing_struct=RadixTree())
-r = Router(app=app, root='/api/v1')
-
-
 @dataclass
 class Place:
     city: str
@@ -49,6 +45,11 @@ class UserToResponse(DataClassORJSONMixin, BaseBodyResponseEntity):
     answer: UserAnswer
 
 
+app = PepperAPI(routing_struct=RadixTree())
+
+r = Router(root='/api/v1')
+
+
 # EXAMPLE OF REGULAR REQUEST WITH BODY DATA AND RESPONSE
 @r.route('/test')
 class Test1(BaseHandler):
@@ -71,6 +72,9 @@ class TestH2(BaseHandler):
                     await sleep(0)
 
         return file_getter  # or file_getter()
+
+
+app.include_router(router=r)
 
 
 if __name__ == '__main__':

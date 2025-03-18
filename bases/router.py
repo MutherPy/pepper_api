@@ -1,20 +1,29 @@
 from abc import ABC, abstractmethod
+from typing import Type
 
-from bases.app import BaseApp
+from bases.handler import BaseHandler
+from exc.runtime_exc import IncorrectInheritance
 
 
 class BaseRouter(ABC):
-
-    def __init__(self, *, app: BaseApp, root: str):
-        self.app = app
+    def __init__(self, *, root: str):
         self.root = root
+        self._handlers: dict[str, Type[BaseHandler]] = {}
+
+    @property
+    def handlers(self) -> dict[str, Type[BaseHandler]]:
+        return self._handlers
 
     def get_full_path(self, path: str) -> str:
         return f'{self.root}{path}'
 
-    @abstractmethod
     def route(self, path: str):
-        pass
+        def inner(cls):
+            if not issubclass(cls, BaseHandler):
+                raise IncorrectInheritance(cls, BaseHandler)
+            self._handlers[self.get_full_path(path)] = cls
+            return cls
+        return inner
 
 
 # class BaseSubRouter(ABC, ReExtender):

@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Callable
+from typing import Type
 
+from bases.handler import BaseHandler
 from bases import RSFindType
 
 
 class BaseRoutingStructure(ABC):
     @abstractmethod
-    def add_route(self, path: str, handler: Callable):
+    def add_route(self, path: str, handler: Type[BaseHandler]):
         pass
 
     @abstractmethod
