@@ -5,7 +5,7 @@ from mashumaro.mixins.orjson import DataClassORJSONMixin
 from app import PepperAPI
 from bases.body import BaseBodyEntity, BaseBodyResponseEntity
 from routing.router import Router
-from bases.handler import BaseHandler
+from bases.handler import BaseHandler, meta
 from routing.router_tree import RadixTree
 from asyncio import sleep
 
@@ -62,11 +62,13 @@ class Test1(BaseHandler):
 # EXAMPLE OF STREAMING RESPONSE
 @r.route('/test/{id}')
 class TestH2(BaseHandler):
+    @meta(content_type='image/png')
     async def get(self, id: int):
         print(id)
 
         async def file_getter():
-            with open('example.py', 'rb') as f:
+            # use smth like IOfiles
+            with open('example_img.png', 'rb') as f:
                 for line in f:
                     yield line
                     await sleep(0)

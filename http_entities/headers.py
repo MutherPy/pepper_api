@@ -16,6 +16,9 @@ class Headers(BaseHeaders):
 
     @classmethod
     def from_dict(cls, data: dict):
+        for k in list(data.keys()):
+            if '_' in k:
+                data[k.replace('_', '-')] = data.pop(k)
         return cls(_headers=data)
 
     def get(self, key: str, default: str = None) -> str | None:

@@ -42,7 +42,7 @@ class BaseApp(ABC):
         pass
 
     @abstractmethod
-    def build_headers(self, **kwargs) -> BaseHeaders:
+    def build_headers(self, headers: Optional[dict] = None) -> BaseHeaders:
         pass
 
     @abstractmethod

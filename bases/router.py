@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Type
+from typing import Type, Optional
 
 from bases.handler import BaseHandler
 from exc.runtime_exc import IncorrectInheritance
