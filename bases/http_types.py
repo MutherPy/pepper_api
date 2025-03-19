@@ -2,8 +2,8 @@ from collections import namedtuple
 
 
 RequestType = namedtuple(
-    'RequestType', ('HTTP', )
-)("http")
+    'RequestType', ('HTTP', "LIFE")
+)("http", "lifespan")
 
 ReceiveEventType = namedtuple(
     'ReceiveEventType', ('START', 'DISCONNECT')

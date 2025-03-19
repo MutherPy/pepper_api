@@ -29,3 +29,9 @@ class PermAccessDenied(Exception):
     def __init__(self):
         msg = f'Unauthorized access denied'
         super().__init__(msg)
+
+
+class QueryParamExpected(Exception):
+    def __init__(self, q_name):
+        msg = f'Expected query parameter: {q_name}'
+        super().__init__(msg)

@@ -11,6 +11,7 @@ _HANDLED_EXC = {
     request_exc.UnprocessableEntity: HTTPStatus.UNPROCESSABLE_ENTITY,
     request_exc.PermAccessDenied: HTTPStatus.FORBIDDEN,
     request_exc.AuthAccessDenied: HTTPStatus.UNAUTHORIZED,
+    request_exc.QueryParamExpected: HTTPStatus.BAD_REQUEST,
 }
 
 

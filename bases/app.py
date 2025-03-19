@@ -7,6 +7,7 @@ from bases.http_entities.response import BaseResponse
 from bases.handler import BaseHandler
 from typing import Any, Optional, Type, Union
 
+from bases.http_types import RequestType
 from bases.middleware import BaseMiddleware
 from bases.routing_struct import BaseRoutingStructure
 from core.exc_result import ExceptionResult
@@ -69,9 +70,12 @@ class BaseApp(ABC):
         return response
 
     async def __call__(self, scope: dict, receive, send):
-        try:
-            response = await self.__app(scope, receive, send)
-        except Exception as e:
-            exc_result: ExceptionResult = await self.exceptions_handler(e=e)
-            response: BaseResponse = await self.build_response(result=None, exc_result=exc_result)
-        await response.send_to_asgi(send)
+        if scope['type'] == RequestType.HTTP:
+            try:
+                response = await self.__app(scope, receive, send)
+            except Exception as e:
+                exc_result: ExceptionResult = await self.exceptions_handler(e=e)
+                response: BaseResponse = await self.build_response(result=None, exc_result=exc_result)
+            await response.send_to_asgi(send)
+        elif scope['type'] == RequestType.LIFE:
+            print('lifespan')
