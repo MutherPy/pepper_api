@@ -52,7 +52,11 @@ class PepperAPI(BaseApp):
             basic_headers.update(headers)
         return Headers.from_dict(basic_headers)
 
-    async def build_response(self, result: Optional[Any] = None, exc_result: Optional[ExceptionResult] = None) -> Union[HTTPResponse, StreamingHTTPResponse]:
+    async def build_response(
+            self,
+            result: Optional[Union[Any, HandlerMethodResult]] = None,
+            exc_result: Optional[ExceptionResult] = None
+    ) -> Union[HTTPResponse, StreamingHTTPResponse]:
         response: Union[HTTPResponse, StreamingHTTPResponse]
 
         headers_ext = None

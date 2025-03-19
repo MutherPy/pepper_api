@@ -1,14 +1,16 @@
 from dataclasses import dataclass
-from exc.request_exc import NotFound, IncorrectHTTPMethod, MethodNotAllowed, UnprocessableEntity
+from exc import request_exc
 from http import HTTPStatus
 import traceback
 
 
 _HANDLED_EXC = {
-    IncorrectHTTPMethod: HTTPStatus.BAD_REQUEST,
-    NotFound: HTTPStatus.NOT_FOUND,
-    MethodNotAllowed: HTTPStatus.METHOD_NOT_ALLOWED,
-    UnprocessableEntity: HTTPStatus.UNPROCESSABLE_ENTITY,
+    request_exc.IncorrectHTTPMethod: HTTPStatus.BAD_REQUEST,
+    request_exc.NotFound: HTTPStatus.NOT_FOUND,
+    request_exc.MethodNotAllowed: HTTPStatus.METHOD_NOT_ALLOWED,
+    request_exc.UnprocessableEntity: HTTPStatus.UNPROCESSABLE_ENTITY,
+    request_exc.PermAccessDenied: HTTPStatus.FORBIDDEN,
+    request_exc.AuthAccessDenied: HTTPStatus.UNAUTHORIZED,
 }
 
 

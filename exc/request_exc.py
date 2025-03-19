@@ -18,3 +18,14 @@ class MethodNotAllowed(Exception):
 class UnprocessableEntity(Exception):
     pass
 
+
+class AuthAccessDenied(Exception):
+    def __init__(self):
+        msg = f'Unauthenticated access denied'
+        super().__init__(msg)
+
+
+class PermAccessDenied(Exception):
+    def __init__(self):
+        msg = f'Unauthorized access denied'
+        super().__init__(msg)
