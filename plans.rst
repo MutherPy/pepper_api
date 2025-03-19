@@ -8,4 +8,4 @@
 
 5) better headers propagation. now like shit, no headers in response...
 
-6) fix routing -> app registration
+6) [+] fix routing -> app registration

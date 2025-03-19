@@ -2,9 +2,10 @@ from http import HTTPStatus
 from typing import Type, Any, Union, Optional
 
 from bases import AsyncFunction
-from bases.handler import BaseHandler, HandlerMethodResult
+from bases.handler import BaseHandler
 from core.exc_result import ExceptionResult
 from core.response_factory import ResponseBuilder
+from core.method_meta import HandlerMethodResult
 from exc.request_exc import NotFound
 from bases.app import BaseApp
 from bases.reader import BaseReader
@@ -56,15 +57,17 @@ class PepperAPI(BaseApp):
 
         headers_ext = None
 
-        status = HTTPStatus.OK
-        if not isinstance(result, HandlerMethodResult):
-            body = result
+        if result is not None:
+            status = HTTPStatus.OK
+            if not isinstance(result, HandlerMethodResult):
+                body = result
+            else:
+                body = result.method_result
+                headers_ext = result.method_meta
         else:
-            body = result.method_result
-            headers_ext = result.method_meta
-        if exc_result:
             status = exc_result.status
             body = exc_result.body
+
         response = await ResponseBuilder.build(status=status, body=body)
         h = self.build_headers(headers_ext)
         response.update_headers(headers=h)

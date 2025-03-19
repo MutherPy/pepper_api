@@ -5,8 +5,9 @@ from mashumaro.mixins.orjson import DataClassORJSONMixin
 from app import PepperAPI
 from bases.body import BaseBodyEntity, BaseBodyResponseEntity
 from routing.router import Router
-from bases.handler import BaseHandler, meta
+from bases.handler import BaseHandler
 from routing.router_tree import RadixTree
+from core.method_meta import meta
 from asyncio import sleep
 
 
