@@ -4,6 +4,9 @@ from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from app import PepperAPI
 from bases.body import BaseBodyEntity, BaseBodyResponseEntity
+from bases.middleware import BaseMiddleware
+from exc.request_exc import AuthAccessDenied, PermAccessDenied
+from http_entities import Headers
 from routing.router import Router
 from bases.handler import BaseHandler
 from routing.router_tree import RadixTree
@@ -47,6 +50,29 @@ class UserToResponse(DataClassORJSONMixin, BaseBodyResponseEntity):
 
 
 app = PepperAPI(routing_struct=RadixTree())
+
+
+class AuthMiddleware(BaseMiddleware):
+    async def __call__(self, scope, receive, send):
+        headers = Headers.from_scope(scope)
+        if not headers.get('Authorize'):
+            raise AuthAccessDenied
+        resp = await self.app(scope, receive, send)
+        resp.start.headers.update(Authorized='true')
+        return resp
+
+
+class Permissions(BaseMiddleware):
+    async def __call__(self, scope, receive, send):
+        headers = Headers.from_scope(scope)
+        if not headers.get('Permissions'):
+            raise PermAccessDenied
+        return await self.app(scope, receive, send)
+
+
+# LIFO like middlewares processing
+app.add_middleware(Permissions)
+app.add_middleware(AuthMiddleware)
 
 r = Router(root='/api/v1')
 
