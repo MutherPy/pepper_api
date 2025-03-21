@@ -8,10 +8,10 @@ from bases.middleware import BaseMiddleware, BaseHandlerMiddleware
 from exc.request_exc import AuthAccessDenied, PermAccessDenied, QueryParamExpected
 from http_entities import Headers
 from routing.router import Router
-from bases.handler import BaseHandler
+from bases.handler import BaseHandler, BaseWSHandler
 from routing.router_tree import RadixTree
 from core.method_meta import meta
-from asyncio import sleep
+from asyncio import sleep, QueueEmpty
 
 
 @dataclass
@@ -49,7 +49,7 @@ class UserToResponse(DataClassORJSONMixin, BaseBodyResponseEntity):
     answer: UserAnswer
 
 
-app = PepperAPI(routing_struct=RadixTree())
+app = PepperAPI(http_routing_struct=RadixTree(), ws_routing_struct=RadixTree())
 
 
 # THIS MIDDLEWARES ARE GLOBAL
@@ -118,6 +118,36 @@ class TestH2(BaseHandler):
                     await sleep(0)
 
         return file_getter  # or file_getter()
+
+
+# EXAMPLES OF USING WS CONNECTIONS
+
+# pinging + echo endpoint
+@r.ws_route('/ws/simple_test')
+class TestWS(BaseWSHandler):
+    async def writer(self) -> str:
+        try:
+            q_msg = self.q.get_nowait()
+            return "ECHO: " + q_msg
+        except QueueEmpty:
+            await sleep(1)
+            return 'hello'
+
+    async def reader(self, message):
+        print('Message rec: ', message)
+        await self.q.put(message)
+
+
+# generator endpoint.
+@r.ws_route('/ws/gen_writer')
+class TestWS(BaseWSHandler):
+    async def writer(self):
+        for i in range(10):
+            yield str(i)
+            await sleep(1)
+
+    async def reader(self, message):
+        print('Message rec: ', message)
 
 
 app.include_router(router=r)

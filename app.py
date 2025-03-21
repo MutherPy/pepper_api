@@ -2,8 +2,8 @@ from http import HTTPStatus
 from typing import Type, Any, Union, Optional
 
 from bases import AsyncFunction
-from bases.handler import BaseHandler
-from core.exc_result import ExceptionResult
+from bases.handler import BaseHandler, BaseWSHandler
+from core.exc_result import ExceptionResult, WSExceptionResult
 from core.response_factory import ResponseBuilder
 from core.method_meta import HandlerMethodResult
 from exc.request_exc import NotFound
@@ -11,10 +11,11 @@ from bases.app import BaseApp
 from bases.reader import BaseReader
 
 from core.readers import reader_provider
+from exc.runtime_exc import WrongRouting
 from http_entities import (
     Headers,
     HTTPResponse,
-    HTTPRequest, StreamingHTTPResponse
+    HTTPRequest, StreamingHTTPResponse, WSRequest
 )
 
 
@@ -30,6 +31,9 @@ class PepperAPI(BaseApp):
         await self.read_body(request=r, receive=receive)
         return r
 
+    async def build_ws_request(self, scope: dict) -> WSRequest:
+        return WSRequest.from_scope(scope)
+
     async def request_handler(self, request: HTTPRequest):
         handler: Type[BaseHandler]
         url_params: dict
@@ -37,12 +41,35 @@ class PepperAPI(BaseApp):
         handler, url_params = self.find_handler(request.path)
         if not handler:
             raise NotFound(request.path)
+        elif not issubclass(handler, BaseHandler):
+            raise WrongRouting(request.path, handler, BaseHandler)
         handler_inst = handler(request=request)
         result = await handler_inst.process(request.method, url_params)
         return result
 
+    async def ws_request_handler(self, request: WSRequest, receive, send):
+        handler: Type[BaseWSHandler]
+        url_params: dict
+
+        handler, url_params = self.find_ws_handler(request.path)
+        if not handler:
+            raise NotFound(request.path)
+        elif not issubclass(handler, BaseWSHandler):
+            raise WrongRouting(request.path, handler, BaseWSHandler)
+        handler_inst = handler(request=request, url_params=url_params)
+        e = None
+        try:
+            await handler_inst.process(receive, send)
+        except Exception as _e:
+            e = _e
+        finally:
+            return handler_inst.is_connected, e
+
     async def exceptions_handler(self, e: Exception) -> ExceptionResult:
         return ExceptionResult.from_exc(e)
+
+    async def ws_exceptions_handler(self, e: Exception) -> WSExceptionResult:
+        return WSExceptionResult.from_exc(e)
 
     def build_headers(self, headers: Optional[dict] = None) -> Headers:
         basic_headers = {

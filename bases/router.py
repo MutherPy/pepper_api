@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Type, Optional
 
-from bases.handler import BaseHandler
+from bases.handler import BaseHandler, BaseWSHandler
 from exc.runtime_exc import IncorrectInheritance
 
 
@@ -9,10 +9,15 @@ class BaseRouter(ABC):
     def __init__(self, *, root: str):
         self.root = root
         self._handlers: dict[str, Type[BaseHandler]] = {}
+        self._ws_handlers: dict[str, Type[BaseWSHandler]] = {}
 
     @property
     def handlers(self) -> dict[str, Type[BaseHandler]]:
         return self._handlers
+
+    @property
+    def ws_handlers(self) -> dict[str, Type[BaseWSHandler]]:
+        return self._ws_handlers
 
     def get_full_path(self, path: str) -> str:
         return f'{self.root}{path}'
@@ -22,6 +27,14 @@ class BaseRouter(ABC):
             if not issubclass(cls, BaseHandler):
                 raise IncorrectInheritance(cls, BaseHandler)
             self._handlers[self.get_full_path(path)] = cls
+            return cls
+        return inner
+
+    def ws_route(self, path: str):
+        def inner(cls):
+            if not issubclass(cls, BaseWSHandler):
+                raise IncorrectInheritance(cls, BaseWSHandler)
+            self._ws_handlers[self.get_full_path(path)] = cls
             return cls
         return inner
 

@@ -3,7 +3,7 @@ from inspect import isasyncgenfunction
 from mashumaro import DataClassDictMixin, pass_through
 from mashumaro.config import BaseConfig
 
-from bases.http_types import ResponseType, SendEventTypes
+from bases.http_types import ResponseType, HTTPSendEventTypes
 from core.response_factory import register_response_type
 from http_entities.headers import Headers
 
@@ -28,7 +28,7 @@ class HTTPResponseStart(DataClassDictMixin, BaseStartResponse):
     @classmethod
     def build(cls, status) -> "HTTPResponseStart":
         return cls(
-            type=SendEventTypes.START,
+            type=HTTPSendEventTypes.START,
             status=status
         )
 
@@ -59,7 +59,7 @@ class HTTPResponseBody(DataClassDictMixin, BaseBodyResponse):
     @classmethod
     def build(cls, body) -> "HTTPResponseBody":
         return cls(
-            type=SendEventTypes.BODY,
+            type=HTTPSendEventTypes.BODY,
             body=body
         )
 
@@ -106,7 +106,7 @@ class StreamingHTTPResponseBody(BaseBodyResponse):
     @classmethod
     def build(cls, body) -> "StreamingHTTPResponseBody":
         return cls(
-            type=SendEventTypes.BODY,
+            type=HTTPSendEventTypes.BODY,
             body=body
         )
 

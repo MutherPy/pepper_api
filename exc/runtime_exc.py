@@ -42,3 +42,9 @@ class NotEnoughUrlParams(Exception):
     def __init__(self, arg):
         msg = f"Not enough parameters for controller: {', '.join(arg)}"
         super().__init__(msg)
+
+
+class WrongRouting(Exception):
+    def __init__(self, path, current_handler_class, expected_handler_class):
+        msg = f'Path {path} returned {current_handler_class.__name__} but {expected_handler_class.__name__} expected'
+        super().__init__(msg)

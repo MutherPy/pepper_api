@@ -2,15 +2,15 @@ from abc import ABC, abstractmethod
 
 from bases import AsyncFunction, RSFindType
 from bases.http_entities.headers import BaseHeaders
-from bases.http_entities.request import BaseRequest
+from bases.http_entities.request import BaseRequest, BaseWSRequest
 from bases.http_entities.response import BaseResponse
-from bases.handler import BaseHandler
+from bases.handler import BaseHandler, BaseWSHandler
 from typing import Any, Optional, Type, Union
 
-from bases.http_types import RequestType
+from bases.http_types import RequestType, WSSendEventTypes
 from bases.middleware import BaseMiddleware
 from bases.routing_struct import BaseRoutingStructure
-from core.exc_result import ExceptionResult
+from core.exc_result import ExceptionResult, WSExceptionResult
 from typing import TYPE_CHECKING
 
 from core.method_meta import HandlerMethodResult
@@ -20,26 +20,44 @@ if TYPE_CHECKING:
 
 
 class BaseApp(ABC):
-    def __init__(self, routing_struct: BaseRoutingStructure):
-        self.routing_struct: BaseRoutingStructure = routing_struct
+    def __init__(self, http_routing_struct: BaseRoutingStructure, ws_routing_struct: BaseRoutingStructure = None):
+        self.http_routing_struct: BaseRoutingStructure = http_routing_struct
+        self.ws_routing_struct: Optional[BaseRoutingStructure] = ws_routing_struct if ws_routing_struct else http_routing_struct
 
-        self.__app = self.app
+        self.http_app = self.main_http_app
+
+        self.ws_app = self.main_ws_app
 
     def _register_route(self, path: str, handler: Type[BaseHandler]):
-        self.routing_struct.add_route(path=path, handler=handler)
+        self.http_routing_struct.add_route(path=path, handler=handler)
+
+    def _register_ws_route(self, path: str, handler: Type[BaseWSHandler]):
+        self.ws_routing_struct.add_route(path, handler)
 
     def include_router(self, router: "BaseRouter"):
         for path, handler in router.handlers.items():
             self._register_route(path, handler=handler)
+        for path, handler in router.ws_handlers.items():
+            self._register_ws_route(path, handler)
 
     def add_middleware(self, middleware: Type[BaseMiddleware]):
-        self.__app = middleware(self.__app)
+        self.http_app = middleware(self.http_app)
+
+    def add_ws_middleware(self, middleware):  # TODO add ws middlewares interface
+        self.ws_app = middleware(self.ws_app)
 
     def find_handler(self, path: str) -> RSFindType:
-        return self.routing_struct.find_handler(path=path)
+        return self.http_routing_struct.find_handler(path=path)
+
+    def find_ws_handler(self, path: str) -> RSFindType:
+        return self.ws_routing_struct.find_handler(path=path)
 
     @abstractmethod
     async def build_request(self, scope: dict, receive: AsyncFunction) -> BaseRequest:
+        pass
+
+    @abstractmethod
+    async def build_ws_request(self, scope: dict) -> BaseWSRequest:
         pass
 
     @abstractmethod
@@ -47,7 +65,15 @@ class BaseApp(ABC):
         pass
 
     @abstractmethod
+    async def ws_request_handler(self, request: BaseWSRequest, receive: AsyncFunction, send: AsyncFunction):
+        pass
+
+    @abstractmethod
     async def exceptions_handler(self, e: Exception) -> ExceptionResult:
+        pass
+
+    @abstractmethod
+    async def ws_exceptions_handler(self, e: Exception) -> WSExceptionResult:
         pass
 
     @abstractmethod
@@ -58,7 +84,7 @@ class BaseApp(ABC):
     async def build_response(self, result: Optional[Any] = None, exc_result: Optional[ExceptionResult] = None) -> BaseResponse:
         pass
 
-    async def app(self, scope: dict, receive, send) -> BaseResponse:
+    async def main_http_app(self, scope: dict, receive, send) -> BaseResponse:
         request: BaseRequest = await self.build_request(scope=scope, receive=receive)
         result: Optional[Any] = None
         exc_result: Optional[ExceptionResult] = None
@@ -69,13 +95,30 @@ class BaseApp(ABC):
         response: BaseResponse = await self.build_response(result=result, exc_result=exc_result)
         return response
 
+    async def main_ws_app(self, scope: dict, receive, send):
+        request: BaseWSRequest = await self.build_ws_request(scope=scope)
+        is_connected, e = await self.ws_request_handler(request, receive, send)
+        return is_connected, e
+
     async def __call__(self, scope: dict, receive, send):
         if scope['type'] == RequestType.HTTP:
             try:
-                response = await self.__app(scope, receive, send)
+                response = await self.http_app(scope, receive, send)
             except Exception as e:
                 exc_result: ExceptionResult = await self.exceptions_handler(e=e)
                 response: BaseResponse = await self.build_response(result=None, exc_result=exc_result)
             await response.send_to_asgi(send)
+        elif scope['type'] == RequestType.WS:
+            is_connected = False
+            try:
+                is_connected, e = await self.ws_app(scope, receive, send)
+                if e:
+                    raise e
+            except Exception as e:
+                exc_result: WSExceptionResult = await self.ws_exceptions_handler(e=e)
+                # let client connect, and then close connection to share info while closing
+                if not is_connected:
+                    await send({"type": WSSendEventTypes.ACCEPT})
+                await send({"type": WSSendEventTypes.CLOSE, "code": exc_result.code, "reason": exc_result.reason})
         elif scope['type'] == RequestType.LIFE:
             print('lifespan')

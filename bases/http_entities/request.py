@@ -6,10 +6,19 @@ from bases.http_entities.query import BaseQuery
 
 
 @dataclass
-class BaseRequest(BaseJsonHttp, BaseASGICompScope, ABC):
+class CommonASGIRequest(ABC):
     type: str
-    method: str
     path: str
-    headers: BaseHeaders
     query_string: BaseQuery
+    headers: BaseHeaders
+
+
+@dataclass
+class BaseRequest(BaseJsonHttp, BaseASGICompScope, CommonASGIRequest, ABC):
+    method: str
     body: bytes | None = None
+
+
+@dataclass
+class BaseWSRequest(BaseASGICompScope, CommonASGIRequest, ABC):
+    ...

@@ -1,17 +1,21 @@
-from abc import ABC
-from typing import Callable, Optional, Any
+from abc import ABC, abstractmethod
+from asyncio import Queue, Task, create_task, gather, CancelledError
+from typing import Callable, Union, AsyncIterable
 
 from bases.body import BaseBodyEntity
+from bases.http_entities.request import BaseRequest, BaseWSRequest
 
 from exc.request_exc import MethodNotAllowed, UnprocessableEntity
 from exc.runtime_exc import ServiceError, EmptyArgumentAnnotation, TooMuchUrlParams, NotEnoughUrlParams
-from http_entities.request import HTTPRequest
-from inspect import signature, Parameter
+
+from bases.http_types import WSReceiveEventTypes, WSSendEventTypes
+
+from inspect import signature, Parameter, isasyncgenfunction
 
 
 class BaseHandler(ABC):
-    def __init__(self, request: HTTPRequest):
-        self.r: HTTPRequest = request
+    def __init__(self, request: BaseRequest):
+        self.r: BaseRequest = request
 
     def _handle_callable_args(self, controller: Callable, url_params: dict) -> dict:
         annotated_parameter: Parameter
@@ -60,3 +64,66 @@ class BaseHandler(ABC):
         except AttributeError:
             raise ServiceError
         return await controller_method(**args_to_pass)
+
+
+class BaseWSHandler(ABC):
+    def __init__(self, request: BaseWSRequest, url_params: dict = None):
+        self.r = request
+        self.url_params = url_params
+
+        self.q = Queue()
+
+        self.is_connected = False
+
+        self.__tasks: tuple[Task, Task] = None
+
+    async def __tasks_cancel(self):
+        for t in self.__tasks:
+            if not t.cancelled():
+                t.cancel()
+
+    async def __reader(self, receive):
+        while True:
+            event = await receive()
+            if event["type"] == WSReceiveEventTypes.RECEIVE:
+                message = event["text"]
+                await self.reader(message=message)
+            elif event["type"] == WSReceiveEventTypes.CONNECT:
+                self.is_connected = True
+            elif event["type"] == WSReceiveEventTypes.DISCONNECT:
+                break
+        await self.__tasks_cancel()
+
+    @abstractmethod
+    async def reader(self, message):
+        ...
+
+    async def __gen_writer(self, send):
+        async for msg in self.writer():
+            await send({"type": WSSendEventTypes.SEND, "text": msg})
+
+    async def __simple_writer(self, send):
+        while True:
+            result = await self.writer()
+            await send({"type": WSSendEventTypes.SEND, "text": result})
+
+    async def __writer(self, send):
+        if isasyncgenfunction(self.writer):
+            await self.__gen_writer(send)
+        else:
+            await self.__simple_writer(send)
+
+    @abstractmethod
+    async def writer(self) -> Union[str, AsyncIterable]:
+        ...
+
+    async def process(self, receive, send):
+        self.__tasks = (
+            create_task(self.__reader(receive)),
+            create_task(self.__writer(send))
+        )
+        await send({"type": WSSendEventTypes.ACCEPT})
+        try:
+            await gather(*self.__tasks)
+        except CancelledError:
+            pass

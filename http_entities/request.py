@@ -1,6 +1,6 @@
 from http_entities.headers import Headers
 from http_entities.query import Query
-from bases.http_entities.request import BaseRequest
+from bases.http_entities.request import BaseRequest, BaseWSRequest
 from mashumaro import DataClassDictMixin
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 from dataclasses import dataclass
@@ -31,4 +31,16 @@ class HTTPRequest(DataClassORJSONMixin, DataClassDictMixin, BaseRequest):
             path=scope['path'],
             headers=Headers.from_scope(scope),
             query_string=Query.from_scope(scope)
+        )
+
+
+@dataclass
+class WSRequest(DataClassDictMixin, BaseWSRequest):
+    @classmethod
+    def from_scope(cls, scope: dict) -> "WSRequest":
+        return cls(
+            type=scope['type'],
+            path=scope['path'],
+            headers=Headers.from_scope(scope),
+            query_string=Query.from_scope(scope),
         )
