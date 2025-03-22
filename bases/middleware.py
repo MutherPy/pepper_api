@@ -19,6 +19,7 @@ class BaseHandlerMiddleware(ABC):
         def call_wrapper(f):
             @wraps(f)
             def wrapper(self, *args, **kwargs):
+                # f == decor_cls.__init__
                 f(self, *args, **kwargs)
                 # to allow custom logic reach decorated instance
                 cls.logic(self)

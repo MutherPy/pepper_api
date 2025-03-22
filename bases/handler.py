@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from asyncio import Queue, Task, create_task, gather, CancelledError
-from typing import Callable, Union, AsyncIterable
+from typing import Callable, Union, AsyncIterable, Any
 
 from bases.body import BaseBodyEntity
 from bases.http_entities.request import BaseRequest, BaseWSRequest
@@ -53,7 +53,7 @@ class BaseHandler(ABC):
             raise TooMuchUrlParams(url_params.keys())
         return args_to_return
 
-    async def process(self, method: str, url_params: dict):
+    async def process(self, method: str, url_params: dict) -> Any:
         method = method.lower()
         try:
             controller_method: Callable = getattr(self, method)
@@ -61,7 +61,7 @@ class BaseHandler(ABC):
             raise MethodNotAllowed(method)
         try:
             args_to_pass: dict = self._handle_callable_args(controller=controller_method, url_params=url_params)
-        except AttributeError:
+        except AttributeError:  # TODO why?
             raise ServiceError
         return await controller_method(**args_to_pass)
 

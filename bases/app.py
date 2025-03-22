@@ -7,7 +7,7 @@ from bases.http_entities.response import BaseResponse
 from bases.handler import BaseHandler, BaseWSHandler
 from typing import Any, Optional, Type, Union
 
-from bases.http_types import RequestType, WSSendEventTypes
+from bases.http_types import ScopeType, WSSendEventTypes
 from bases.middleware import BaseMiddleware
 from bases.routing_struct import BaseRoutingStructure
 from core.exc_result import ExceptionResult, WSExceptionResult
@@ -53,11 +53,7 @@ class BaseApp(ABC):
         return self.ws_routing_struct.find_handler(path=path)
 
     @abstractmethod
-    async def build_request(self, scope: dict, receive: AsyncFunction) -> BaseRequest:
-        pass
-
-    @abstractmethod
-    async def build_ws_request(self, scope: dict) -> BaseWSRequest:
+    async def build_request(self, scope: dict, receive: AsyncFunction = None) -> Union[BaseRequest, BaseWSRequest]:
         pass
 
     @abstractmethod
@@ -96,19 +92,20 @@ class BaseApp(ABC):
         return response
 
     async def main_ws_app(self, scope: dict, receive, send):
-        request: BaseWSRequest = await self.build_ws_request(scope=scope)
+        request: BaseWSRequest = await self.build_request(scope=scope)
         is_connected, e = await self.ws_request_handler(request, receive, send)
         return is_connected, e
 
     async def __call__(self, scope: dict, receive, send):
-        if scope['type'] == RequestType.HTTP:
+        scope_type = scope['type']
+        if scope_type == ScopeType.HTTP:
             try:
                 response = await self.http_app(scope, receive, send)
             except Exception as e:
                 exc_result: ExceptionResult = await self.exceptions_handler(e=e)
                 response: BaseResponse = await self.build_response(result=None, exc_result=exc_result)
             await response.send_to_asgi(send)
-        elif scope['type'] == RequestType.WS:
+        elif scope_type == ScopeType.WS:
             is_connected = False
             try:
                 is_connected, e = await self.ws_app(scope, receive, send)
@@ -120,5 +117,5 @@ class BaseApp(ABC):
                 if not is_connected:
                     await send({"type": WSSendEventTypes.ACCEPT})
                 await send({"type": WSSendEventTypes.CLOSE, "code": exc_result.code, "reason": exc_result.reason})
-        elif scope['type'] == RequestType.LIFE:
+        elif scope_type == ScopeType.LIFE:
             print('lifespan')

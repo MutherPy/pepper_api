@@ -1,38 +1,29 @@
 from http import HTTPStatus
 from typing import Type, Any, Union, Optional
 
-from bases import AsyncFunction
+from bases.app import BaseApp
+
 from bases.handler import BaseHandler, BaseWSHandler
 from core.exc_result import ExceptionResult, WSExceptionResult
+from core.requests.request_factory import RequestFactory
+from core.readers.readers_registry import ReaderRegistry
 from core.response_factory import ResponseBuilder
 from core.method_meta import HandlerMethodResult
 from exc.request_exc import NotFound
-from bases.app import BaseApp
-from bases.reader import BaseReader
 
-from core.readers import reader_provider
 from exc.runtime_exc import WrongRouting
-from http_entities import (
-    Headers,
-    HTTPResponse,
-    HTTPRequest, StreamingHTTPResponse, WSRequest
-)
+
+from http_entities import *
+from core.readers import *
 
 
 class PepperAPI(BaseApp):
-
-    @staticmethod
-    async def read_body(request: HTTPRequest, receive: AsyncFunction):
-        reader: BaseReader = reader_provider.get_reader(request.type)
-        await reader.read(request=request, receiver=receive)
-
-    async def build_request(self, scope: dict, receive: AsyncFunction) -> HTTPRequest:
-        r = HTTPRequest.from_scope(scope)
-        await self.read_body(request=r, receive=receive)
-        return r
-
-    async def build_ws_request(self, scope: dict) -> WSRequest:
-        return WSRequest.from_scope(scope)
+    async def build_request(self, scope: dict, receive: AsyncFunction = None) -> Union[HTTPRequest, StreamingHTTPResponse, WSRequest]:
+        req_obj = await RequestFactory.create(scope)
+        reader = ReaderRegistry.retrieve(request_type=req_obj.type)
+        if reader:
+            await reader.read(req_obj, receive)
+        return req_obj
 
     async def request_handler(self, request: HTTPRequest):
         handler: Type[BaseHandler]

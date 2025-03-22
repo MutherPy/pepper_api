@@ -16,3 +16,6 @@
 8) add skip mdlwr(s) decorator for Handler and method
 9) add lifespan method registration
 
+ACHTUNG
+
+while start server using @route to inspect signature of methods and check if all params fullfilled

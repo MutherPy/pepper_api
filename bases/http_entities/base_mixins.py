@@ -1,4 +1,5 @@
 from abc import abstractmethod, ABC
+from functools import singledispatch
 
 
 class BaseJsonHttp(ABC):

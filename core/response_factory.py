@@ -5,7 +5,7 @@ from bases.http_types import ResponseType
 from inspect import isasyncgenfunction, isasyncgen
 
 
-class ResponseFactory:
+class ResponseRegistry:
     _registry: dict[str, Type[BaseResponse]] = {}
 
     @classmethod
@@ -21,7 +21,7 @@ class ResponseFactory:
 
 def register_response_type(key):
     def decorator(cls):
-        ResponseFactory.register(key, cls)
+        ResponseRegistry.register(key, cls)
         return cls
     return decorator
 
@@ -45,7 +45,7 @@ class ResponseBuilder:
     async def build(status, body):
         response_type = ResponseBuilder.get_resp_type(body)
         content_type = ResponseBuilder.get_resp_content_type(response_type)
-        resp_class = ResponseFactory.retrieve(response_type)
+        resp_class = ResponseRegistry.retrieve(response_type)
         response = resp_class.build(status=status, body=body)
         response.start.headers.set('content-type', content_type)
         return response

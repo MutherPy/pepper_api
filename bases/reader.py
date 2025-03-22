@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
 
 from bases import AsyncFunction
-from http_entities.request import HTTPRequest
+from bases.http_entities.request import BaseRequest
 
 
 class BaseReader(ABC):
     @abstractmethod
-    async def read(self, request: HTTPRequest, receiver: AsyncFunction):
+    async def read(self, request: BaseRequest, receiver: AsyncFunction):
         pass

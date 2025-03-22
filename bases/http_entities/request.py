@@ -14,11 +14,11 @@ class CommonASGIRequest(ABC):
 
 
 @dataclass
-class BaseRequest(BaseJsonHttp, BaseASGICompScope, CommonASGIRequest, ABC):
+class BaseRequest(BaseASGICompScope, CommonASGIRequest, ABC):
     method: str
     body: bytes | None = None
 
 
 @dataclass
 class BaseWSRequest(BaseASGICompScope, CommonASGIRequest, ABC):
-    ...
+    pass

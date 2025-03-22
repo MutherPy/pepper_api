@@ -8,7 +8,7 @@ import traceback
 
 
 _HANDLED_EXC = {
-    request_exc.IncorrectHTTPMethod: HTTPStatus.BAD_REQUEST,
+    request_exc.IncorrectRequestType: HTTPStatus.BAD_REQUEST,
     request_exc.NotFound: HTTPStatus.NOT_FOUND,
     request_exc.MethodNotAllowed: HTTPStatus.METHOD_NOT_ALLOWED,
     request_exc.UnprocessableEntity: HTTPStatus.UNPROCESSABLE_ENTITY,
@@ -34,6 +34,7 @@ class ExceptionResult(BaseExceptionResult):
 
     @classmethod
     def from_exc(cls, e: Exception) -> "ExceptionResult":
+        # TODO change to print_exc
         if status := _HANDLED_EXC.get(type(e)):
             print(traceback.print_tb(e.__traceback__))
             return cls(status=status, body=str(e))

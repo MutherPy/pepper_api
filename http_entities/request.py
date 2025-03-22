@@ -5,8 +5,13 @@ from mashumaro import DataClassDictMixin
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 from dataclasses import dataclass
 from mashumaro.config import BaseConfig
+from io import FileIO
+
+from core.requests.request_registry import register_request_type
+from bases.http_types import RequestType
 
 
+@register_request_type(RequestType.COMMON_HTTP)
 @dataclass
 class HTTPRequest(DataClassORJSONMixin, DataClassDictMixin, BaseRequest):
     headers: Headers
@@ -34,6 +39,32 @@ class HTTPRequest(DataClassORJSONMixin, DataClassDictMixin, BaseRequest):
         )
 
 
+@register_request_type(RequestType.FILE_HTTP)
+@dataclass
+class HTTPFileRequest(HTTPRequest):
+    body: bytes | None = None
+
+
+@register_request_type(RequestType.BIGFILE_HTTP)
+@dataclass
+class HTTPBigFileRequest(BaseRequest):
+    body: FileIO | None = None
+
+    def to_json(self) -> str:
+        pass
+
+    @classmethod
+    def from_scope(cls, scope: dict):
+        return cls(
+            type=scope['type'],
+            method=scope['method'],
+            path=scope['path'],
+            headers=Headers.from_scope(scope),
+            query_string=Query.from_scope(scope)
+        )
+
+
+@register_request_type(RequestType.COMMON_WS)
 @dataclass
 class WSRequest(DataClassDictMixin, BaseWSRequest):
     @classmethod

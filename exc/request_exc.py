@@ -1,6 +1,8 @@
 
-class IncorrectHTTPMethod(Exception):
-    pass
+class IncorrectRequestType(Exception):
+    def __init__(self, cur_type):
+        msg = f'Invalid request type: {cur_type}'
+        super().__init__(msg)
 
 
 class NotFound(Exception):
