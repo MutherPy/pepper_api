@@ -15,6 +15,8 @@ from typing import TYPE_CHECKING
 
 from core.method_meta import HandlerMethodResult
 
+from contextvars import ContextVar
+
 if TYPE_CHECKING:
     from bases.router import BaseRouter
 
@@ -27,6 +29,8 @@ class BaseApp(ABC):
         self.http_app = self.main_http_app
 
         self.ws_app = self.main_ws_app
+
+        self.ws_connection: ContextVar = ContextVar('ws_connection', default=False)
 
     def _register_route(self, path: str, handler: Type[BaseHandler]):
         self.http_routing_struct.add_route(path=path, handler=handler)
@@ -93,8 +97,7 @@ class BaseApp(ABC):
 
     async def main_ws_app(self, scope: dict, receive, send):
         request: BaseWSRequest = await self.build_request(scope=scope)
-        is_connected, e = await self.ws_request_handler(request, receive, send)
-        return is_connected, e
+        await self.ws_request_handler(request, receive, send)
 
     async def __call__(self, scope: dict, receive, send):
         scope_type = scope['type']
@@ -106,15 +109,12 @@ class BaseApp(ABC):
                 response: BaseResponse = await self.build_response(result=None, exc_result=exc_result)
             await response.send_to_asgi(send)
         elif scope_type == ScopeType.WS:
-            is_connected = False
             try:
-                is_connected, e = await self.ws_app(scope, receive, send)
-                if e:
-                    raise e
+                await self.ws_app(scope, receive, send)
             except Exception as e:
-                exc_result: WSExceptionResult = await self.ws_exceptions_handler(e=e)
+                exc_result: WSExceptionResult = await self.ws_exceptions_handler(e)
                 # let client connect, and then close connection to share info while closing
-                if not is_connected:
+                if not self.ws_connection.get():
                     await send({"type": WSSendEventTypes.ACCEPT})
                 await send({"type": WSSendEventTypes.CLOSE, "code": exc_result.code, "reason": exc_result.reason})
         elif scope_type == ScopeType.LIFE:

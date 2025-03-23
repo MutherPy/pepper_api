@@ -48,13 +48,11 @@ class PepperAPI(BaseApp):
         handler, url_params = self.find_ws_handler(request.path)
         self._check_routing(request, handler, BaseWSHandler)
         handler_inst = handler(request=request, url_params=url_params)
-        e = None
         try:
             await handler_inst.process(receive, send)
-        except Exception as _e:
-            e = _e
-        finally:
-            return handler_inst.is_connected, e
+        except Exception:
+            self.ws_connection.set(handler_inst.is_connected)
+            raise
 
     async def exceptions_handler(self, e: Exception) -> ExceptionResult:
         return ExceptionResult.from_exc(e)

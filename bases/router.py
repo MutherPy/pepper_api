@@ -26,7 +26,7 @@ class BaseRouter(ABC):
         def inner(cls):
             if not issubclass(cls, BaseHandler):
                 raise IncorrectInheritance(cls, BaseHandler)
-            self._handlers[self.get_full_path(path)] = cls
+            self._handlers[self.get_full_path(path)] = cls  # TODO startup handler sign check
             return cls
         return inner
 
