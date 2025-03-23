@@ -19,21 +19,24 @@ from core.readers import *
 
 class PepperAPI(BaseApp):
     async def build_request(self, scope: dict, receive: AsyncFunction = None) -> Union[HTTPRequest, StreamingHTTPResponse, WSRequest]:
-        req_obj = await RequestFactory.create(scope)
+        req_obj = RequestFactory.create(scope)
         reader = ReaderRegistry.retrieve(request_type=req_obj.type)
         if reader:
             await reader.read(req_obj, receive)
         return req_obj
+
+    def _check_routing(self, request, sr_handler, exp_handler):
+        if not sr_handler:
+            raise NotFound(request.path)
+        elif not issubclass(sr_handler, exp_handler):
+            raise WrongRouting(request.path, sr_handler, exp_handler)
 
     async def request_handler(self, request: HTTPRequest):
         handler: Type[BaseHandler]
         url_params: dict
 
         handler, url_params = self.find_handler(request.path)
-        if not handler:
-            raise NotFound(request.path)
-        elif not issubclass(handler, BaseHandler):
-            raise WrongRouting(request.path, handler, BaseHandler)
+        self._check_routing(request, handler, BaseHandler)
         handler_inst = handler(request=request)
         result = await handler_inst.process(request.method, url_params)
         return result
@@ -43,10 +46,7 @@ class PepperAPI(BaseApp):
         url_params: dict
 
         handler, url_params = self.find_ws_handler(request.path)
-        if not handler:
-            raise NotFound(request.path)
-        elif not issubclass(handler, BaseWSHandler):
-            raise WrongRouting(request.path, handler, BaseWSHandler)
+        self._check_routing(request, handler, BaseWSHandler)
         handler_inst = handler(request=request, url_params=url_params)
         e = None
         try:

@@ -61,7 +61,7 @@ class RequestFactory:
         return potential_req_type
 
     @staticmethod
-    async def create(scope: dict) -> Union[BaseRequest, BaseWSRequest]:
+    def create(scope: dict) -> Union[BaseRequest, BaseWSRequest]:
         req_obj: Union[BaseRequest, BaseWSRequest]
 
         scope_type = scope["type"]
