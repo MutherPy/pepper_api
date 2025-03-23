@@ -4,14 +4,14 @@ from mashumaro import DataClassDictMixin, pass_through
 from mashumaro.config import BaseConfig
 
 from bases.http_types import ResponseType, HTTPSendEventTypes
-from core.response_factory import register_response_type
+from core.responses.response_registry import register_response_type
 from http_entities.headers import Headers
 
 from bases.http_entities.response import BaseStartResponse, BaseBodyResponse, BaseResponse
 from dataclasses import dataclass, field, fields
 from orjson import dumps
 from bases.body import BaseBodyResponseEntity
-from typing import AsyncGenerator, Callable
+from typing import AsyncGenerator
 
 
 @dataclass

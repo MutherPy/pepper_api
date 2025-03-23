@@ -7,7 +7,7 @@ from bases.handler import BaseHandler, BaseWSHandler
 from core.exc_result import ExceptionResult, WSExceptionResult
 from core.requests.request_factory import RequestFactory
 from core.readers.readers_registry import ReaderRegistry
-from core.response_factory import ResponseBuilder
+from core.responses.response_factory import ResponseFactory
 from core.method_meta import HandlerMethodResult
 from exc.request_exc import NotFound
 
@@ -90,7 +90,7 @@ class PepperAPI(BaseApp):
             status = exc_result.status
             body = exc_result.body
 
-        response = await ResponseBuilder.build(status=status, body=body)
+        response = await ResponseFactory.create(status=status, body=body)
         h = self.build_headers(headers_ext)
         response.update_headers(headers=h)
         return response

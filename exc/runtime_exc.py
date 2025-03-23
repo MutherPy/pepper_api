@@ -1,7 +1,7 @@
 
 class IncorrectRegistering(Exception):
-    def __init__(self, cls: object):
-        msg = f'{cls.__name__} already registered.'
+    def __init__(self, cls_type):
+        msg = f'{cls_type} is not allowed for registering.'
         super().__init__(msg)
 
 

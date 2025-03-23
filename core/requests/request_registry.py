@@ -4,6 +4,8 @@ from bases.registry import BaseRegistry
 from exc.runtime_exc import MissedRegistering
 
 from bases.http_entities.request import BaseRequest
+from bases.http_types import RequestType
+from exc.runtime_exc import IncorrectRegistering
 
 
 class RequestRegistry(BaseRegistry):
@@ -11,6 +13,8 @@ class RequestRegistry(BaseRegistry):
 
     @classmethod
     def register(cls, request_type, request_class):
+        if request_type not in RequestType:
+            raise IncorrectRegistering(request_type)
         cls._registry[request_type] = request_class
 
     @classmethod
