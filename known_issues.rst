@@ -9,3 +9,5 @@ Routing
 * Potentially sensitive info returns to client while raising exception
 
 * No ability to close WS connection from endpoint side
+
+* No multipart data support

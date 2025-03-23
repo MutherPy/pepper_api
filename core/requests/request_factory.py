@@ -16,26 +16,19 @@ class ContentTypeDetector:
         if content_type.startswith('application/json'):
             return False
         return (
-                guess_extension(content_type) is not None or
-                content_type.startswith("multipart/form-data")
+                guess_extension(content_type) is not None  # FIXME multipart completely incorrect
+                # or
+                # content_type.startswith("multipart/form-data")
         )
 
     @staticmethod
-    def is_f_data_file(content_disposition: str) -> bool:
-        if "filename=" in content_disposition:
-            return True
-        return False
-
-    @staticmethod
-    def is_file(content_type: Optional[str], content_disposition: Optional[str]):
-        c_t_file, c_d_file = False, False
+    def is_file(content_type: Optional[str]):
+        c_t_file = False
 
         if content_type:
             c_t_file = ContentTypeDetector.is_c_type_file(content_type)
-        if content_disposition:
-            c_d_file = ContentTypeDetector.is_f_data_file(content_disposition)
 
-        return c_t_file or c_d_file
+        return c_t_file
 
 
 class ContentLengthDetector:
@@ -51,10 +44,9 @@ class RequestFactory:
     @staticmethod
     def find_http_req_type(headers: Headers) -> str:
         c_t = headers.get('content-type')
-        c_d = headers.get('content-disposition')
         c_l = headers.get('content-length')
         potential_req_type = RequestType.COMMON_HTTP
-        if ContentTypeDetector.is_file(c_t, c_d):
+        if ContentTypeDetector.is_file(c_t):
             potential_req_type = RequestType.FILE_HTTP
             if ContentLengthDetector.is_big(c_l):
                 potential_req_type = RequestType.BIGFILE_HTTP
@@ -84,5 +76,4 @@ class RequestFactory:
         req_class: Type[BaseRequest] = RequestRegistry.retrieve(req_class_type)
         req_obj = req_class.from_scope(scope=scope)
         req_obj.type = req_class_type
-
         return req_obj

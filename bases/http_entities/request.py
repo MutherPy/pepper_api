@@ -1,6 +1,9 @@
 from abc import ABC
 from dataclasses import dataclass
-from bases.http_entities.base_mixins import BaseJsonHttp, BaseASGICompScope
+from io import BytesIO, FileIO
+from typing import Union
+
+from bases.http_entities.base_mixins import BaseASGICompScope
 from bases.http_entities.headers import BaseHeaders
 from bases.http_entities.query import BaseQuery
 
@@ -16,7 +19,22 @@ class CommonASGIRequest(ABC):
 @dataclass
 class BaseRequest(BaseASGICompScope, CommonASGIRequest, ABC):
     method: str
+    body: Union[bytes, BytesIO, FileIO]
+
+
+@dataclass
+class BaseBodyRequest(ABC):
     body: bytes | None = None
+
+
+@dataclass
+class BaseFileRequest(ABC):
+    body: BytesIO | None = None
+
+
+@dataclass
+class BaseBigFileRequest(ABC):
+    body: FileIO | None = None
 
 
 @dataclass
