@@ -1,56 +1,42 @@
 from abc import ABC, abstractmethod
 from asyncio import Queue, Task, create_task, gather, CancelledError
+from types import MappingProxyType
 from typing import Callable, Union, AsyncIterable, Any
 
 from bases.body import BaseBodyEntity
 from bases.http_entities.request import BaseRequest, BaseWSRequest
 
 from exc.request_exc import MethodNotAllowed, UnprocessableEntity
-from exc.runtime_exc import ServiceError, EmptyArgumentAnnotation, TooMuchUrlParams, NotEnoughUrlParams
+from exc.runtime_exc import ServiceError
 
 from bases.http_types import WSReceiveEventTypes, WSSendEventTypes
 
-from inspect import signature, Parameter, isasyncgenfunction
+from inspect import isasyncgenfunction
 
 
 class BaseHandler(ABC):
+    # using to speed up type casting while runtime
+    # set up while routing registering handler
+    # set to each Class-Handler registered for any http defined method
+    __methods_precompile__: MappingProxyType[Callable, MappingProxyType[str, type]]
+
     def __init__(self, request: BaseRequest):
         self.r: BaseRequest = request
 
-    def _handle_callable_args(self, controller: Callable, url_params: dict) -> dict:
-        annotated_parameter: Parameter
-
-        param_name: str
-        param_type: type
-
+    def _handle_callable_args(self, method: Callable, url_params: dict[str, str]) -> dict:
+        # method - bound method to handler instance. mapping - has class functions
+        method_annotations: MappingProxyType[str, type] = self.__methods_precompile__.get(method.__func__)
+        if not method_annotations:
+            raise RuntimeError(f'No mapping key: {method.__func__}')
         args_to_return: dict = {}
-
-        error_params = []
-
-        sign = signature(controller)
-        for annotated_parameter in sign.parameters.values():
-            param_name = annotated_parameter.name
-            param_type = annotated_parameter.annotation
-
-            if param_type is sign.empty:
-                raise EmptyArgumentAnnotation(param_name)
-
-            if issubclass(param_type, BaseBodyEntity):
+        for param_name, type_obj in method_annotations.items():
+            if issubclass(type_obj, BaseBodyEntity):
                 try:
-                    args_to_return[param_name] = param_type.from_json(self.r.body)
+                    args_to_return[param_name] = type_obj.from_json(self.r.body)
                 except Exception as e:
                     raise UnprocessableEntity(str(e)) from e
-                continue
-
-            if url_param_value := url_params.pop(param_name, None):
-                args_to_return[param_name] = param_type(url_param_value)
             else:
-                error_params.append(param_name)
-
-        if error_params:
-            raise NotEnoughUrlParams(error_params)
-        if url_params:
-            raise TooMuchUrlParams(url_params.keys())
+                args_to_return[param_name] = type_obj(url_params[param_name])
         return args_to_return
 
     async def process(self, method: str, url_params: dict) -> Any:
@@ -60,7 +46,7 @@ class BaseHandler(ABC):
         except AttributeError:
             raise MethodNotAllowed(method)
         try:
-            args_to_pass: dict = self._handle_callable_args(controller=controller_method, url_params=url_params)
+            args_to_pass: dict = self._handle_callable_args(method=controller_method, url_params=url_params)
         except AttributeError:  # TODO why?
             raise ServiceError
         return await controller_method(**args_to_pass)

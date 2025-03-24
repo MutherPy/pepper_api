@@ -28,7 +28,7 @@ class BaseHandlerMiddleware(ABC):
         new = type(
             f'Decor_{decor_cls.__name__}',
             (decor_cls,),
-            {'__init__': call_wrapper(decor_cls.__init__)}
+            {'__init__': call_wrapper(decor_cls.__init__), **decor_cls.__dict__}
         )
         new.__module__ = decor_cls.__module__
         return new

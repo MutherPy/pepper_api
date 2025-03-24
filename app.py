@@ -25,11 +25,11 @@ class PepperAPI(BaseApp):
             await reader.read(req_obj, receive)
         return req_obj
 
-    def _check_routing(self, request, sr_handler, exp_handler):
-        if not sr_handler:
+    def _check_routing(self, request, found_handler, exp_handler):
+        if not found_handler:
             raise NotFound(request.path)
-        elif not issubclass(sr_handler, exp_handler):
-            raise WrongRouting(request.path, sr_handler, exp_handler)
+        elif not issubclass(found_handler, exp_handler):
+            raise WrongRouting(request.path, found_handler, exp_handler)
 
     async def request_handler(self, request: HTTPRequest):
         handler: Type[BaseHandler]
@@ -37,7 +37,7 @@ class PepperAPI(BaseApp):
 
         handler, url_params = self.find_handler(request.path)
         self._check_routing(request, handler, BaseHandler)
-        handler_inst = handler(request=request)
+        handler_inst: BaseHandler = handler(request=request)
         result = await handler_inst.process(request.method, url_params)
         return result
 
@@ -47,7 +47,7 @@ class PepperAPI(BaseApp):
 
         handler, url_params = self.find_ws_handler(request.path)
         self._check_routing(request, handler, BaseWSHandler)
-        handler_inst = handler(request=request, url_params=url_params)
+        handler_inst: BaseWSHandler = handler(request=request, url_params=url_params)
         try:
             await handler_inst.process(receive, send)
         except Exception:

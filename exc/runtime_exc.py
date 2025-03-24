@@ -27,20 +27,20 @@ class ServiceError(Exception):
 
 
 class EmptyArgumentAnnotation(Exception):
-    def __init__(self, arg):
-        msg = f"Not annotated controller argument: {arg}"
+    def __init__(self, method, handler, param_name):
+        msg = f"Not annotated controller argument: {handler}.{method} -> {param_name}"
         super().__init__(msg)
 
 
 class TooMuchUrlParams(Exception):
-    def __init__(self, arg):
-        msg = f"Too much parameters for controller: {', '.join(arg)}"
+    def __init__(self, method, handler, param_names):
+        msg = f"Too much parameters for controller: {handler}.{method} -> {', '.join(param_names)}"
         super().__init__(msg)
 
 
 class NotEnoughUrlParams(Exception):
-    def __init__(self, arg):
-        msg = f"Not enough parameters for controller: {', '.join(arg)}"
+    def __init__(self, method, handler, param_names):
+        msg = f"Not enough parameters for controller: {handler}.{method} -> {', '.join(param_names)}"
         super().__init__(msg)
 
 
