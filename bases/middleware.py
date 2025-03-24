@@ -28,6 +28,7 @@ class BaseHandlerMiddleware(ABC):
         new = type(
             f'Decor_{decor_cls.__name__}',
             (decor_cls,),
+            # path decor_cls.__dict__ to allow method pre-compiler work. otherwise - through mro
             {'__init__': call_wrapper(decor_cls.__init__), **decor_cls.__dict__}
         )
         new.__module__ = decor_cls.__module__
@@ -35,4 +36,5 @@ class BaseHandlerMiddleware(ABC):
 
     @abstractmethod
     def logic(self):
+        """ Work after __init__ """
         pass

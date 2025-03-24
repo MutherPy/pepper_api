@@ -1,24 +1,59 @@
 from abc import ABC, abstractmethod
 from asyncio import Queue, Task, create_task, gather, CancelledError
+from collections import defaultdict
+from http import HTTPMethod
 from types import MappingProxyType
-from typing import Callable, Union, AsyncIterable, Any
+from typing import Callable, Union, AsyncIterable, Any, Type
 
 from bases.body import BaseBodyEntity
 from bases.http_entities.request import BaseRequest, BaseWSRequest
 
 from exc.request_exc import MethodNotAllowed, UnprocessableEntity
-from exc.runtime_exc import ServiceError
+from exc.runtime_exc import ServiceError, EmptyArgumentAnnotation
 
 from bases.http_types import WSReceiveEventTypes, WSSendEventTypes
 
-from inspect import isasyncgenfunction
+from inspect import isasyncgenfunction, signature
+
+
+class HandlerMethodsPreCompiler:
+    @staticmethod
+    def _get_handler_methods(handler: Type["BaseHandler"]) -> dict:
+        user_defined_attrs = {}
+        for k, v in handler.__dict__.items():
+            if k.upper() not in HTTPMethod.__members__:
+                continue
+            user_defined_attrs[k] = v
+        return user_defined_attrs
+
+    @staticmethod
+    def inspect_handler_methods(handler: Type["BaseHandler"]) -> defaultdict[Callable, dict[str, type]]:
+        user_methods: dict = HandlerMethodsPreCompiler._get_handler_methods(handler)
+        method_ann_types = defaultdict(dict)
+        for method in user_methods.values():
+            sign = signature(method)
+            for annotated_parameter in sign.parameters.values():
+                param_name = annotated_parameter.name
+                if param_name == 'self':
+                    continue
+                param_type = annotated_parameter.annotation
+
+                if param_type is sign.empty:
+                    raise EmptyArgumentAnnotation(method, handler, param_name)
+
+                method_ann_types[method][param_name] = param_type
+        return method_ann_types
 
 
 class BaseHandler(ABC):
     # using to speed up type casting while runtime
-    # set up while routing registering handler
     # set to each Class-Handler registered for any http defined method
+    # NOTE method_ann_types -> mapping <function Handler.get> not <bound method Handler.get>
     __methods_precompile__: MappingProxyType[Callable, MappingProxyType[str, type]]
+
+    def __init_subclass__(cls, **kwargs):
+        method_ann_types = HandlerMethodsPreCompiler.inspect_handler_methods(cls)
+        cls.__methods_precompile__ = MappingProxyType({k: MappingProxyType(v) for k, v in method_ann_types.items()})
 
     def __init__(self, request: BaseRequest):
         self.r: BaseRequest = request
